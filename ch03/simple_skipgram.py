@@ -31,17 +31,17 @@ class SimpleSkipGram:
         # W_in or W_out.T -> what to use for word embedding
         self.word_vecs = W_in
 
-    def forward(self, context, targets):
+    def forward(self, contexts, target):
         # print(context)
         # print(context.shape)
         # print(targets)
         # print(targets.shape)
-        h = self.in_layer.forward(context)
+        h = self.in_layer.forward(contexts)
         o1 = self.out_layer0.forward(h)
         o2 = self.out_layer1.forward(h)
-        loss1 = self.loss_layer0.forward(o1, targets[:, 0])
-        loss2 = self.loss_layer1.forward(o2, targets[:, 1])
-        loss = (loss1 + loss2) / 2
+        loss1 = self.loss_layer0.forward(o1, target[:, 0])
+        loss2 = self.loss_layer1.forward(o2, target[:, 1])
+        loss = loss1 + loss2
         return loss
 
     def backward(self, dout=1):
