@@ -74,11 +74,36 @@ class Embedding:
             dW[word_id] += dout[i]
         return
 
-# W_in = np.random.randn(6, 4)
-# layer = Matmul(W_in)
-# x = np.array([1] + [0] * 5)
-#
-# result = layer.forward(x)
-# print(result.shape)
-# print(W_in)
-# print(result)
+class Sigmoid:
+    def __init__(self):
+        self.params, self.grads = [], []
+        self.out = None
+
+    def forward(self, x):
+        out = 1 / (1 + np.exp(-x))
+        self.out = out   # 계층을 통과한 y값 저장 (역전파 때 사용)
+        return out
+
+    def backward(self, dout):
+        dx = dout * (1.0 - self.out) * self.out   # 순전파 결과 사용
+        return dx
+
+class SigmoidWithLoss:
+    def __init__(self):
+        self.params, self.grads = [], []
+        self.loss = None
+        self.y = None   # 출력
+        self.t = None   # 정답
+
+    def forward(self, x, t):
+        self.t = t
+        self.y = 1 / (1 + np.exp(-x))
+        self.loss = cross_entropy_error(np.c_[1 - self.y, self.y], self.t)   # np.c_: concatenate (세로로)_
+        return self.loss
+
+    def backward(self, dout=1):
+        batch_size = self.t.shape[0]
+        dx = (self.y - self.t) * dout / batch_size   # dL/dx = y-t로부터
+        return dx
+
+
