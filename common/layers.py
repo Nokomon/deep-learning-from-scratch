@@ -1,8 +1,13 @@
 import sys
 sys.path.append('..')
 
-import numpy as np
+from collections import Counter
+
 from common.functions import *
+from common.layers import *
+from common.np import *
+
+import numpy as np
 
 class Matmul:
     def __init__(self, W):
@@ -113,3 +118,47 @@ class SigmoidWithLoss:
         return dx
 
 
+class UnigramSampler:
+    def __init__(self, corpus, power, sample_size):
+        self.sample_size = sample_size   # 몇 개를 샘플링 할 것인지?
+        self.vocab_size = None
+        self.word_p = None   # 궁극적으로는 단어당 출현 확률분포
+
+        counts = Counter()
+        for word_id in corpus:
+            counts[word_id] += 1
+        # 여기까지: counts에는 "단어id: 빈도수" 저장
+
+        vocab_size = len(counts)
+        self.vocab_size = vocab_size
+
+        self.word_p = np.zeros(vocab_size)
+        for i in range(vocab_size):
+            self.word_p[i] = counts[i]
+        # 여기까지: self.word_p에는 "단어: 빈도수" 저장
+
+        self.word_p = np.power(self.word_p, power)   # Negative Sampling: 0.75승
+        self.word_p /= np.sum(self.word_p)
+
+    def get_negative_sample(self, target):   # target: 긍정적 예의 타깃(열벡터)
+        batch_size = target.shape[0]
+
+        if not GPU:
+            # 미니배치 크기 x 샘플 크기 형태로 0행렬 만듦
+            negative_sample = np.zeros((batch_size, self.sample_size), dtype=np.int32)
+
+            for i in range(batch_size):
+                p = self.word_p.copy()
+                target_idx = target[i]
+                p[target_idx] = 0
+                p /= p.sum()
+                negative_sample[i, :] = np.random.choice(self.vocab_size,
+                                                         size=self.sample_size,
+                                                         replace=False,
+                                                         p=p)
+        else:
+            negative_sample = np.random.choice(self.vocab_size,
+                                               size=(batch_size, self.sample_size),
+                                               replace=True,
+                                               p=self.word_p)
+        return negative_sample
