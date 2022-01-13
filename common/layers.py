@@ -66,12 +66,15 @@ class Embedding:
         아래 코드는, 같은 단어에 대해 역전파할 때 값이 덮어쓰이는 문제 발생.
         따라서, 같은 단어에 대해 역전파한다면 그 값을 더해줘야 하고,
         이유는 matmul 계층을 역전파하는 과정에서 dW 값을 도출할 때 값들이 더해지기 때문
+        따라서, 라인 76-77과 같이 진행.
         """
         # dw[self.idx] = dout
-
-        """따라서, 아래 코드로 진행해야 한다."""
-        for i, word_id in enumerate(self.idx):
-            dW[word_id] += dout[i]
+        if GPU:
+            import cupyx
+            cupyx.scatter_add(dW, self.idx, dout)
+        else:
+            for i, word_id in enumerate(self.idx):
+                dW[word_id] += dout[i]
         return
 
 class Sigmoid:
@@ -96,6 +99,9 @@ class SigmoidWithLoss:
         self.t = None   # 정답
 
     def forward(self, x, t):
+        # 정답/오답 여부: 각각 1 or 0으로
+        # 후에 NegativeSamplingLoss 클래스에서 np.ones 또는 np.zeros로 label을 만들고
+        # 이를 파라미터 t로 받음
         self.t = t
         self.y = 1 / (1 + np.exp(-x))
         self.loss = cross_entropy_error(np.c_[1 - self.y, self.y], self.t)   # np.c_: concatenate (세로로)_
