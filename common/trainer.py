@@ -51,7 +51,7 @@ class Trainer:
         if ylim is not None:
             plt.ylim(*ylim)
         plt.plot(x, self.loss_list, label='train')
-        plt.xlabel('반복 (x' + str(self.eval_interval) + ')')
-        plt.ylabel('손실')
+        plt.xlabel('Iteration (x' + str(self.eval_interval) + ')')
+        plt.ylabel('Loss')
         plt.rc('axes', unicode_minus=False)
         plt.show()

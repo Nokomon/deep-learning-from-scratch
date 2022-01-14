@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 
-import numpy as np
+from common.np import *
 from common.layers import Embedding
 from ch04.negative_sampling_layer import NegativeSamplingLoss
 
@@ -11,13 +11,13 @@ class CBOW:
 
         # 가중치 초기화
         W_in = np.random.randn(V, H).astype('f')
-        W_out = np.random.randn(H, V).astype('f')
+        W_out = np.random.randn(V, H).astype('f')
 
         # 계층 생성
         self.in_layers = []
         for i in range(2 * window_size):
             layer = Embedding(W_in)
-            self,in_layers.append(layer)
+            self.in_layers.append(layer)
         self.ns_loss = NegativeSamplingLoss(W_out, corpus, power=0.75, sample_size=5)
 
         # 모든 가중치의 기울기를 하나로
