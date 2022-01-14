@@ -3,6 +3,12 @@ sys.path.append('..')
 import os
 from common.np import *
 
+import nltk
+nltk.download('stopwords')
+from nltk.corpus import stopwords
+
+stopwords = stopwords.words('english')
+
 def convert_one_hot(corpus, vocab_size):
     '''원핫 표현으로 변환
 
@@ -93,6 +99,10 @@ def most_similar(query, word_to_id, id_to_word, word_matrix, top=5):
     for i in (-1 * similarity).argsort():
         if id_to_word[i] == query:
             continue
+        if "<" in id_to_word[i]:   # special token 제외시키기 위함
+            continue
+        # if id_to_word[i] in stopwords:   # stopwords 너무 많이 나와서 제외시키기 위함. (you와 같은 단어 추론에는 취약해짐)
+        #     continue
         print(' %s: %s' % (id_to_word[i], similarity[i]))
 
         count += 1
@@ -139,6 +149,10 @@ def analogy(a, b, c, word_to_id, id_to_word, word_matrix, top=5, answer=None):
             continue
         if id_to_word[i] in (a, b, c):
             continue
+        if "<" in id_to_word[i]:   # speical token 안나오도록 처리
+            continue
+        # if id_to_word[i] in stopwords:   # stopwords면은 continue한다
+        #     continue
         print(' {0}: {1}'.format(id_to_word[i], similarity[i]))
 
         count += 1

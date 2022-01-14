@@ -11,7 +11,7 @@ with open(pkl_file, 'rb') as f:
     word_to_id = params['word_to_id']
     id_to_word = params['id_to_word']
 
-querys = ['you', 'year', 'car', 'hotel']
+querys = ['you', 'year', 'car', 'hotel', 'toyota']
 for query in querys:
     most_similar(query, word_to_id, id_to_word, word_vecs, top=5)
 

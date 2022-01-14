@@ -29,6 +29,9 @@ class SkipGram:
         # 인스턴스 변수에 임베딩 결과 저장
         self.word_vecs = W_in
 
-    def forward(self, context, targets):
-        h = self.in_layer.forward(context)
-        for i in
+    def forward(self, contexts, target):
+        h = self.in_layer.forward(target)
+        loss = 0
+        for i, layer in enumerate(self.ns_loss_layers):
+            loss += layer.forward(h, contexts[:, i])
+        return loss

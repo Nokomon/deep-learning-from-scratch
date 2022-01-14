@@ -33,7 +33,6 @@ trainer = Trainer(model, optimizer)
 
 # 학습
 trainer.fit(contexts, target, max_epoch, batch_size)
-trainer.plot()
 
 word_vecs = model.word_vecs
 if config.GPU:
@@ -46,3 +45,6 @@ params['id_to_word'] = id_to_word
 pkl_file = 'cbow_params_W_in.pkl'
 with open(pkl_file, 'wb') as f:
     pickle.dump(params, f, -1)
+    
+# loss plot 그리기
+trainer.plot()
