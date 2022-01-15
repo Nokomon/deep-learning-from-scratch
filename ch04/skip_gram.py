@@ -35,3 +35,6 @@ class SkipGram:
         for i, layer in enumerate(self.ns_loss_layers):
             loss += layer.forward(h, contexts[:, i])
         return loss
+
+    def backward(self, dout=1):
+        dout

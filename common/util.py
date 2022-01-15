@@ -149,7 +149,7 @@ def analogy(a, b, c, word_to_id, id_to_word, word_matrix, top=5, answer=None):
             continue
         if id_to_word[i] in (a, b, c):
             continue
-        if "<" in id_to_word[i]:   # speical token 안나오도록 처리
+        if "<" in id_to_word[i]:   # speical token(<unk> 등) 안나오도록 처리
             continue
         # if id_to_word[i] in stopwords:   # stopwords면은 continue한다
         #     continue

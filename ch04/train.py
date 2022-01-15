@@ -46,5 +46,5 @@ pkl_file = 'cbow_params_W_in.pkl'
 with open(pkl_file, 'wb') as f:
     pickle.dump(params, f, -1)
     
-# loss plot 그리기
+# loss plot 그리기 (파이썬 스크립트에서의 작동 검토)
 trainer.plot()
