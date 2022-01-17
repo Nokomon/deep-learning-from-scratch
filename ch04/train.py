@@ -9,6 +9,7 @@ import pickle
 from common.trainer import Trainer
 from common.optimizer import Adam
 from cbow import CBOW
+from skip_gram import SkipGram
 from common.util import *
 from dataset import ptb
 
@@ -27,7 +28,9 @@ if config.GPU:
     contexts, target = to_gpu(contexts), to_gpu(target)
 
 # 모델, 옵티마이저, 트레이너 설정
-model = CBOW(vocab_size, hidden_size, window_size, corpus)
+# CBOW
+# model = CBOW(vocab_size, hidden_size, window_size, corpus)
+model = SkipGram(vocab_size, hidden_size, window_size, corpus)
 optimizer = Adam()
 trainer = Trainer(model, optimizer)
 
@@ -42,7 +45,7 @@ params = {}
 params['word_vecs'] = word_vecs.astype(np.float16)
 params['word_to_id'] = word_to_id
 params['id_to_word'] = id_to_word
-pkl_file = 'cbow_params_W_in.pkl'
+pkl_file = 'skipgram_params_W_in.pkl'
 with open(pkl_file, 'wb') as f:
     pickle.dump(params, f, -1)
     

@@ -37,4 +37,8 @@ class SkipGram:
         return loss
 
     def backward(self, dout=1):
-        dout
+        dh = 0
+        for i, layer in enumerate(self.ns_loss_layers):
+            dh += layer.backward(dout)
+        self.in_layer.backward(dh)
+        return
