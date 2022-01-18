@@ -9,8 +9,8 @@ class SkipGram:
         V, H = vocab_size, hidden_size
 
         # 가중치 초기화
-        W_in = np.random.randn(V, H)
-        W_out = np.random.randn(V, H)
+        W_in = np.random.randn(V, H).astype('f')
+        W_out = np.random.randn(V, H).astype('f')
 
         # 계층 생성
         self.in_layer = Embedding(W_in)
