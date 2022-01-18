@@ -1,3 +1,5 @@
+from common.functions import *
+
 import numpy as np
 
 # RNN cell 한 개
@@ -146,5 +148,21 @@ class TimeAffine:
 
         return dx
 
+class TimeSoftmaxWithLoss:
+    def __init__(self):
+        self.params, self.grads = [], []
+        self.xs = None
+        self.ts = None
 
-
+    # 구현 다시 봐야됨
+    def forward(self, xs, ts):
+        _, T, _ = xs.shape
+        self.xs, self.ts = softmax(xs), ts
+        if self.ts.size == self.xs.size:
+            self.ts = self.ts.argmax(axis=1)
+        
+        loss = 0
+        for i in range(T):
+            loss += cross_entropy_error(self.xs, self.ts)
+        loss = loss / T
+        
