@@ -1,4 +1,5 @@
 from common.functions import *
+from common.layers import *
 
 import numpy as np
 
@@ -151,18 +152,82 @@ class TimeAffine:
 class TimeSoftmaxWithLoss:
     def __init__(self):
         self.params, self.grads = [], []
-        self.xs = None
-        self.ts = None
+        self.cache = None   # 순전파 후 역전파 처음 시작할 때 순전파 정보 불러오기 위함
+        self.ignore_label = -1   # ??????이거 왜 있는거지??????????????
 
-    # 구현 다시 봐야됨
     def forward(self, xs, ts):
-        _, T, _ = xs.shape
-        self.xs, self.ts = softmax(xs), ts
-        if self.ts.size == self.xs.size:
-            self.ts = self.ts.argmax(axis=1)
+        N, T, V = xs.shape
+        if ts.ndim == 3:   # 정답 레이블이 원핫 벡터인 경우
+            ts = ts.argmax(axis=2)   # 1인 인덱스만 뽑아서 ts에 넣는다 -> 형상: (N, t)
+
+        ##################################################################
+        # 도대체 왜 ignore_label하는지 몰라서 실제로 -1이 뜨나 싶어서 추가한 코드 #
+        ##################################################################
+        if self.ignore_label in ts:
+            print("Ignore label detected")
+
+        mask = (ts != self.ignore_label)   # 불린값. 배열로 반환되어, ts와 같은 값인 것만 False
+
+
+        # 배치용과 시계열용을 정리 (reshape) -> 1d배열에서 2d행렬로
+        xs = xs.reshape(N*T, V)
+        ts = ts.reshape(N*T)
+        mask = mask.reshape(N*T)
+
+        ys = softmax(xs)
+        ls = np.log(ys[np.arange(N*T), ts])   # 교차 엔트로피(L) 결괏값들
+
+        # True를 곱해주면 그대로, False를 곱해주면 0으로
+        # 즉, ignore_label에 해당하는 데이터는 손실을 0으로 설정한다.
+        ls *= mask
+        loss = -np.sum(ls)
+        loss /= mask.sum()   # True인 요소들의 개수로 나눈다
         
-        loss = 0
-        for i in range(T):
-            loss += cross_entropy_error(self.xs, self.ts)
-        loss = loss / T
-        
+        self.cache = (ts, ys, mask, (N, T, V))
+        return loss
+
+    # SoftmaxWithLoss의 역전파 보고 다시 볼 것
+    def backward(self, dout=1):
+        ts, ys, mask, (N, T, V) = self.cache
+
+        dx = ys
+        dx[np.arange(N*T), ts] -= 1
+        dx *= dout
+        dx /= mask.sum()
+        dx *= mask[:, np.newaxis]
+        dx = dx.reshape((N, T, V))
+        return dx
+
+class TimeEmbedding:
+    def __init__(self, W):
+        self.W = W
+        self.params = [W]
+        self.grads = [np.zeros_like(W)]
+        self.layers = None
+
+    def forward(self, xs):
+        N, T = xs.shape
+        H, D = self.W.shape
+
+        result = np.zeros_like((N, T, D), dtype='f')
+        self.layers = []
+
+        for t in range(T):
+            layer = Embedding(self.W)
+            self.layers.append(layer)
+            result[:, t, :] = layer.forward(xs[:, t])
+
+        return result
+
+    def backward(self, dout):
+        N, T, D = dout.shape   # TimeRNN 역전파 결과
+
+        gradient = 0
+        for t in range(T):
+            layer = self.layers[t]
+            layer.backward(dout[:, t, :])
+            gradient += layer.grads[0]   # dW
+
+        self.grads[0][...] = gradient
+        return
+
