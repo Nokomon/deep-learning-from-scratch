@@ -209,7 +209,7 @@ class TimeEmbedding:
         N, T = xs.shape
         H, D = self.W.shape
 
-        result = np.zeros_like((N, T, D), dtype='f')
+        result = np.zeros((N, T, D), dtype='f')
         self.layers = []
 
         for t in range(T):

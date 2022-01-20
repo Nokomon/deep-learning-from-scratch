@@ -55,3 +55,6 @@ class Trainer:
         plt.ylabel('Loss')
         plt.rc('axes', unicode_minus=False)
         plt.show()
+
+        # save plt image for future use
+        plt.savefig("result.png", dpi=300)

@@ -4,7 +4,7 @@ sys.path.append('..')
 import pickle
 from common.util import *
 
-pkl_file = 'cbow_params_W_out.pkl'
+pkl_file = 'skipgram_params_W_out.pkl'
 with open(pkl_file, 'rb') as f:
     params = pickle.load(f)   # keys: word_vecs, word_to_id, id_to_word
     word_vecs = params['word_vecs']
