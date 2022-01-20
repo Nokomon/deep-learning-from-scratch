@@ -1,7 +1,6 @@
 from common.functions import *
 from common.layers import *
-
-import numpy as np
+from common.np import *
 
 # RNN cell 한 개
 class RNN:
@@ -148,6 +147,7 @@ class TimeAffine:
         self.grads[1][...] = db
 
         return dx
+
 
 class TimeSoftmaxWithLoss:
     def __init__(self):
