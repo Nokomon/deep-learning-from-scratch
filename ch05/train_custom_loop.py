@@ -17,7 +17,7 @@ lr = 0.1
 max_epoch = 100
 
 # 학습 데이터 읽기(전체 중 1000개만)
-corpus, word_to_id, id_to_word = ptb.load_data('train')
+corpus, word_to_id, id_to_word = ptb.load_data('train')   # 자료형: np배열, dict, dict
 corpus_size = 1000
 corpus = corpus[:corpus_size]
 vocab_size = int(max(corpus) + 1)   # corpus는 0부터 매겨지기에 +1처리
@@ -35,7 +35,7 @@ loss_count = 0
 ppl_list = []   # 에폭마다 perplexity값 저장 용도
 
 # 모델
-model = SimpleRnnlm(vocab_size, hidden_size, wordvec_size)
+model = SimpleRnnlm(vocab_size, wordvec_size, hidden_size)
 optimizer = SGD(lr)
 
 # 각 미니배치에서 샘플을 읽기 위해서 처리

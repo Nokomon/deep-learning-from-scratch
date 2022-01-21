@@ -38,6 +38,7 @@ class RNN:
 
 # T개의 input(x_0 ~ x_T-1)을 받아 T개의 은닉 상태를 반환하는
 # T개의 RNN 셀이 붙어있는 Time RNN 계층 구현
+### Time 계층을 구현할 때는 항상 dimension 선언하면서 구현할 것 ###
 class TimeRNN:
     def __init__(self, Wx, Wh, b, stateful=False):   # stateful: 은닉 상태를 인계받을 것인가?
         self.params = [Wx, Wh, b]

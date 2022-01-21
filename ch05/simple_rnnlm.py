@@ -1,11 +1,11 @@
 import sys
 sys.path.append('..')
-sys.path.append("C:\\Users\\drnur\\Desktop\\밑시딥\\구현\\common")
+# sys.path.append("C:\\Users\\drnur\\Desktop\\밑시딥\\구현\\common")
 import numpy as np
 from common.time_layers import *
 
 class SimpleRnnlm:
-    def __init__(self, vocab_size, hidden_size, vec_size):
+    def __init__(self, vocab_size, vec_size, hidden_size):
         V, D, H = vocab_size, vec_size, hidden_size
 
         # 가중치 초기화

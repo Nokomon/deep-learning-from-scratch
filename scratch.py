@@ -1,4 +1,6 @@
-import numpy as np
+from dataset import ptb
 
-a = np.zeros((3 ,4))
-print(a)
+corpus, word_to_id, id_to_word = ptb.load_data("train")
+
+assert len(word_to_id) == len(id_to_word)
+print(type(id_to_word))
