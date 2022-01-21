@@ -163,14 +163,13 @@ class TimeSoftmaxWithLoss:
         N, T, V = xs.shape
         if ts.ndim == 3:   # 정답 레이블이 원핫 벡터인 경우
             ts = ts.argmax(axis=2)   # 1인 인덱스만 뽑아서 ts에 넣는다 -> 형상: (N, t)
-
+        mask = (ts != self.ignore_label)   # 불린값. 배열로 반환되어, ts와 같은 값인 것만 False
         ##################################################################
         # 도대체 왜 ignore_label하는지 몰라서 실제로 -1이 뜨나 싶어서 추가한 코드 #
         ##################################################################
         if self.ignore_label in ts:
             print("Ignore label detected")
 
-        mask = (ts != self.ignore_label)   # 불린값. 배열로 반환되어, ts와 같은 값인 것만 False
 
 
         # 배치용과 시계열용을 정리 (reshape) -> 1d배열에서 2d행렬로
