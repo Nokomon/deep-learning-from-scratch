@@ -20,10 +20,13 @@ class RNN:
         return h_next
 
     def backward(self, dh_next):   # dh_next: 바로 전 셀에서 가져온 역전파값
+        x, h_prev, h_next = self.cache
+        Wx, Wh, b = self.params
+
         dt = dh_next * (1 - h_next**2)   # tanh 역전파
         db = np.sum(dt, axis=0)
         dWh = np.matmul(h_prev.T, dt)
-        dh_prev = np,matmul(dt, Wh.T)
+        dh_prev = np.matmul(dt, Wh.T)
         dx = np.matmul(dt, Wx.T)
         dWx = np.matmul(x.T, dt)
 
@@ -78,7 +81,7 @@ class TimeRNN:
         N, T, H = dhs.shape
         D, X = Wx.shape
 
-        dxs = np.zeros_like((N, T, D), dtype=np.float32)   # 모든 t에 대한 dx를 담을 '그릇'
+        dxs = np.zeros((N, T, D), dtype=np.float32)   # 모든 t에 대한 dx를 담을 '그릇'
         dh = 0
         grads = [0, 0, 0]   # 각각 dWx, dWh, b의 합을 담을 '그릇'
 
@@ -131,9 +134,9 @@ class TimeAffine:
         return out.reshape(N, T, -1)
 
     def backward(self, dout):
+        x = self.x
         N, T, D = x.shape
         W, b = self.params
-        x = self.x
 
         dout = dout.reshape(N*T, -1)
         x_reshape = x.reshape(N*T, -1)

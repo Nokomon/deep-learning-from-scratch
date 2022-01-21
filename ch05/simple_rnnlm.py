@@ -1,6 +1,6 @@
 import sys
 sys.path.append('..')
-
+sys.path.append("C:\\Users\\drnur\\Desktop\\밑시딥\\구현\\common")
 import numpy as np
 from common.time_layers import *
 
@@ -10,7 +10,6 @@ class SimpleRnnlm:
 
         # 가중치 초기화
         # 필요한 params: TimeEmbedding(W_embed), TimeRNN(Wx, Wh, Wb), TimeAffine(W_affine, b_affine)
-        # 여기서는 사비에르 초기화 안함
         W_embed = (np.random.randn(V, D) / 100).astype('f')
         Wx_rnn = (np.random.randn(D, H) / np.sqrt(D)).astype('f')
         Wh_rnn = (np.random.randn(H, H) / np.sqrt(H)).astype('f')
@@ -36,7 +35,7 @@ class SimpleRnnlm:
     def forward(self, xs, ts):
         for layer in self.layers:
             xs = layer.forward(xs)
-        loss = self.loss_layer(xs, ts)
+        loss = self.loss_layer.forward(xs, ts)
         return loss
 
     def backward(self, dout=1):
@@ -47,4 +46,7 @@ class SimpleRnnlm:
 
     def reset_state(self):
         self.rnn_layer.reset_state()   # TimeRNN에서 self.h = None으로
+
+
+
 
