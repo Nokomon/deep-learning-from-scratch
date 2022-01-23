@@ -80,7 +80,7 @@ class TimeRNN:
     def backward(self, dhs):
         Wx, Wh, b = self.params
         N, T, H = dhs.shape
-        D, X = Wx.shape
+        D, H = Wx.shape
 
         dxs = np.zeros((N, T, D), dtype=np.float32)   # 모든 t에 대한 dx를 담을 '그릇'
         dh = 0
@@ -105,6 +105,7 @@ class TimeRNN:
         # 지금 당장 RNN에서는 쓰진 않는다. BPTT이기에 다음 블록에 역전파 결괏값 전달해 줄 필요 없다
         # 다만, 후에 Seq2seq 구현을 위해 이와 같이 저장함 (RNNLM에서는 안씀!)
         self.dh = dh
+        # print(dh)
 
         return dxs
 
@@ -123,9 +124,9 @@ class TimeAffine:
         """
         [효율이 좋은 이유에 대한 분석]
         - (N, T, D)의 형상으로 한다는 것의 의미는 곧 (N, D)의 Affine 계층 input을 T번 호출한다는 의미
-        - 이것보다는, (NxT, D)의 형상으로 가져감으로써,  T번 호출할 필요 없이 한 번의 행렬곱으로 처릭 ㅏ능
+        - 이것보다는, (NxT, D)의 형상으로 가져감으로써,  T번 호출할 필요 없이 한 번의 행렬곱으로 처리가능
         - (NxT, D)의 의미를 생각해보자.
-            - N은 미니배치 크기, D는 임베딩 차원, T는 Time게층에서 몇 개의 RNN cell을 가져올 것인가의 의미
+            - N은 미니배치 크기, D는 임베딩 차원, T는 Time계층에서 몇 개의 RNN cell을 가져올 것인가의 의미
             - 그러므로, (NxT, D)라고 하면 '모든'(N, T 모두 고려한 '모든') input을 하나로 모은 것
             - 즉, ndim=2의 형태에서, 모든 input을 불러와서, 각 행은 embedded word vector임을 의미  
         """
@@ -157,24 +158,17 @@ class TimeSoftmaxWithLoss:
     def __init__(self):
         self.params, self.grads = [], []
         self.cache = None   # 순전파 후 역전파 처음 시작할 때 순전파 정보 불러오기 위함
-        self.ignore_label = -1   # ??????이거 왜 있는거지??????????????
+        # self.ignore_label = -1   # ??????이거 왜 있는거지??????????????
 
     def forward(self, xs, ts):
         N, T, V = xs.shape
         if ts.ndim == 3:   # 정답 레이블이 원핫 벡터인 경우
             ts = ts.argmax(axis=2)   # 1인 인덱스만 뽑아서 ts에 넣는다 -> 형상: (N, t)
-        mask = (ts != self.ignore_label)   # 불린값. 배열로 반환되어, ts와 같은 값인 것만 False
-        ##################################################################
-        # 도대체 왜 ignore_label하는지 몰라서 실제로 -1이 뜨나 싶어서 추가한 코드 #
-        ##################################################################
-        if self.ignore_label in ts:
-            print("Ignore label detected")
+        mask = (ts >= 0)   # 불린값. 배열로 반환되어, ts와 같은 값인 것만 False. ignore_label 무시하여 작성
 
-
-
-        # 배치용과 시계열용을 정리 (reshape) -> 1d배열에서 2d행렬로
-        xs = xs.reshape(N*T, V)
-        ts = ts.reshape(N*T)
+        # 배치용과 시계열용을 정리 (reshape) for "효율적인" 계산
+        xs = xs.reshape(N*T, V)   # 3d -> 2d
+        ts = ts.reshape(N*T)   # 2d -> 1d
         mask = mask.reshape(N*T)
 
         ys = softmax(xs)
@@ -214,8 +208,8 @@ class TimeEmbedding:
 
         result = np.zeros((N, T, D), dtype='f')
         self.layers = []
-
-        for t in range(T):
+        
+        for t in range(T):   # RNN이 아니기 때문에 reverse 해줄필요 없다. 이건 Embedding 모아놓은 것일뿐
             layer = Embedding(self.W)
             self.layers.append(layer)
             result[:, t, :] = layer.forward(xs[:, t])

@@ -1,6 +1,21 @@
-from dataset import ptb
 
-corpus, word_to_id, id_to_word = ptb.load_data("train")
+import numpy as np
 
-assert len(word_to_id) == len(id_to_word)
-print(type(id_to_word))
+class A:
+    def __init__(self, W):
+        self.W = W
+        self.layers = []
+
+    def f(self, x):
+        print(self.W.shape)
+        # self.layers = []
+        for i in range(3):
+            self.layers.append(i)
+            # print(self.layers)
+        return self.layers
+
+
+array = np.array([1, 2, 3])
+a = A(array)
+a.f(3)
+print(a.layers)
