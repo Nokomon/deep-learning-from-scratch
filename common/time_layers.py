@@ -158,7 +158,6 @@ class TimeSoftmaxWithLoss:
     def __init__(self):
         self.params, self.grads = [], []
         self.cache = None   # 순전파 후 역전파 처음 시작할 때 순전파 정보 불러오기 위함
-        # self.ignore_label = -1   # ??????이거 왜 있는거지??????????????
 
     def forward(self, xs, ts):
         N, T, V = xs.shape
