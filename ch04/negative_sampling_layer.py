@@ -81,7 +81,7 @@ class UnigramSampler:
             # 실험할 때 수정?
             negative_sample = np.random.choice(self.vocab_size,
                                                size=(batch_size, self.sample_size),
-                                               replace=True,
+                                               replace=False,
                                                p=self.word_p)
         return negative_sample
 

@@ -14,7 +14,7 @@ class Trainer:
             max_epoch=10,
             batch_size=32,
             max_grad=None,
-            eval_interval=20):
+            eval_interval=100):   # evaluation interval
         data_size = len(x)
         max_iters = data_size // batch_size
         self.eval_interval = eval_interval
@@ -32,8 +32,8 @@ class Trainer:
                 batch_t = t[iters*batch_size:(iters+1)*batch_size]
                 loss = model.forward(batch_x, batch_t)
                 model.backward()
-                # params, grads = remove_duplicates(model.params, model.grads)
-                optimizer.update(model.params, model.grads)
+                params, grads = remove_duplicate(model.params, model.grads)
+                optimizer.update(params, grads)
                 total_loss += loss
                 loss_count += 1
 
@@ -128,3 +128,38 @@ class RnnlmTrainer:
         plt.xlabel('반복 (x' + str(self.eval_interval) + ')')
         plt.ylabel('퍼플렉서티')
         plt.show()
+
+
+def remove_duplicate(params, grads):
+    '''
+    매개변수 배열 중 중복되는 가중치를 하나로 모아
+    그 가중치에 대응하는 기울기를 더한다.
+    '''
+    params, grads = params[:], grads[:]  # copy list
+
+    while True:
+        find_flg = False
+        L = len(params)
+
+        for i in range(0, L - 1):
+            for j in range(i + 1, L):
+                # 가중치 공유 시
+                if params[i] is params[j]:
+                    grads[i] += grads[j]  # 경사를 더함
+                    find_flg = True
+                    params.pop(j)
+                    grads.pop(j)
+                # 가중치를 전치행렬로 공유하는 경우(weight tying)
+                elif params[i].ndim == 2 and params[j].ndim == 2 and \
+                     params[i].T.shape == params[j].shape and np.all(params[i].T == params[j]):
+                    grads[i] += grads[j].T
+                    find_flg = True
+                    params.pop(j)
+                    grads.pop(j)
+
+                if find_flg: break
+            if find_flg: break
+
+        if not find_flg: break
+
+    return params, grads
