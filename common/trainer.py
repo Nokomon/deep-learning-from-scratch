@@ -33,6 +33,10 @@ class Trainer:
                 loss = model.forward(batch_x, batch_t)
                 model.backward()
                 params, grads = remove_duplicate(model.params, model.grads)
+                # print(len(model.params), len(model.grads))
+                # print(f"model.params: {model.params}")
+                # print(f"params: {params}")
+                # print(len(params), len(grads))
                 optimizer.update(params, grads)
                 total_loss += loss
                 loss_count += 1
@@ -130,6 +134,7 @@ class RnnlmTrainer:
         plt.show()
 
 
+# 이거 다시 봐야됨 내일
 def remove_duplicate(params, grads):
     '''
     매개변수 배열 중 중복되는 가중치를 하나로 모아
