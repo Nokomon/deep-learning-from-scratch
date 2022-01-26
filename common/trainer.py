@@ -140,7 +140,7 @@ class RnnlmTrainer:
         plt.show()
 
 
-# 이거 다시 봐야됨 내일
+# 노션에 정리함
 def remove_duplicate(params, grads):
     '''
     매개변수 배열 중 중복되는 가중치를 하나로 모아
@@ -155,11 +155,11 @@ def remove_duplicate(params, grads):
         for i in range(0, L - 1):
             for j in range(i + 1, L):
                 # 가중치 공유 시
-                if params[i] is params[j]:
-                    match_pair = i, j
-                    if match_pair not in match_list:
-                        match_list.append(match_pair)
-                        print(match_pair)
+                if params[i] is params[j]:   # 계속 i=1, j=2
+                    # match_pair = i, j
+                    # if match_pair not in match_list:
+                    #     match_list.append(match_pair)
+                    #     print(match_pair)
                     grads[i] += grads[j]  # i인덱스에 경사를 더함
                     find_flg = True
                     params.pop(j)
