@@ -295,11 +295,41 @@ class TimeLSTM:
         Wx, Wh, b = self.params
         N, T, D = xs.shape
         H = Wx.shape[1] // 4   # 그냥 Wh.shape[0] 해도됨
-        
 
+        hs = np.zeros((N, T, H), dtype='f')
 
+        # 처음 실행했을 때 or stateful하지 않게 간다면
+        if not self.stateful or self.h is None:
+            self.h = np.zeros((N, H), dtype='f')
+        if not self.stateful or self.c is None:
+            self.c = np.zeros((N, H), dtype='f')
 
+        for t in range(T):
+            layer = LSTM(Wx, Wh, b)
+            self.layers.append(layer)
+            self.h, self.c = layer.forward(x[:, t, :], self.h, self.c)
+            hs[:, t, :] = self.h
+        return hs
 
+    def backward(self, dhs):
+        Wx, Wh, b = self.params
+        N, T, H = dhs.shape
+        D = Wx.shape[0]
+        dxs = np.zeros((N, T, D), dtype='f')
 
+        for t in reversed(range(T)):
+            layer = self.layers[t]
+            dx, dh, dc = layer.backward(self.h, self.c)
+            dxs[:, t, :] = dx
 
+            for i, grad in enumerate(layer.grads):
+                self.grads[i][...] = grad
 
+            self.dh = dh
+            return dxs
+
+    def set_state(self, h, c=None, reset=False):
+        if reset:
+            self.h, self.c = None, None
+        else:
+            self.h, self.c = h, c

@@ -1,6 +1,8 @@
-a = list(map(int, "1 2 3 4 5".split()))
-b = a
-a[0] = 100
-print(a == b)
-print(a is b)
-print(a[0] is b[0])
+import numpy as np
+V, D = 2, 2
+
+W_embed = np.random.randn((V, D), dtype='f')
+print(type(W_embed))
+
+A = np.random.randn((V, D)).astype('f')
+print(type(W_embed) == type(A))
