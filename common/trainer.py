@@ -32,11 +32,17 @@ class Trainer:
                 batch_t = t[iters*batch_size:(iters+1)*batch_size]
                 loss = model.forward(batch_x, batch_t)
                 model.backward()
-                params, grads = remove_duplicate(model.params, model.grads)
+
+                # params, grads: remove_duplicate함으로써 len 61 -> 2
                 # print(len(model.params), len(model.grads))
+                params, grads = remove_duplicate(model.params, model.grads)
+                """
+                - params, grads는 리스트 형태로, remove_duplicate를 통해 나온 
+                """
+                # print(len(params), len(grads))
                 # print(f"model.params: {model.params}")
                 # print(f"params: {params}")
-                # print(len(params), len(grads))
+
                 optimizer.update(params, grads)
                 total_loss += loss
                 loss_count += 1
@@ -44,7 +50,7 @@ class Trainer:
                 if (eval_interval != None) and (iters % eval_interval) == 0:
                     avg_loss = total_loss / loss_count
                     elapsed_time = time.time() - start_time
-                    print('| 에폭 %d |  반복 %d / %d | 시간 %d[s] | 손실 %.2f'
+                    print('| Epoch %d |  Iteration %d / %d | Time Elapsed %d[s] | Loss %.2f'
                           % (self.current_epoch + 1, iters + 1, max_iters, elapsed_time, avg_loss))
                     self.loss_list.append(float(avg_loss))
                     total_loss, loss_count = 0, 0

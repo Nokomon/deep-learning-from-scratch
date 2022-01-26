@@ -17,8 +17,8 @@ from dataset import ptb
 window_size = 5
 hidden_size = 100
 batch_size = 100
-max_epoch = 10
 
+max_epoch = 10
 # 데이터 읽기
 corpus, word_to_id, id_to_word = ptb.load_data('train')
 vocab_size = len(word_to_id)
