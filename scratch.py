@@ -23,7 +23,7 @@ def remove_duplicate(params, grads):
     그 가중치에 대응하는 기울기를 더한다.
     '''
     params, grads = params[:], grads[:]  # copy list
-
+    match_list = []   # for checking match
     while True:
         find_flg = False
         L = len(params)
@@ -32,7 +32,10 @@ def remove_duplicate(params, grads):
             for j in range(i + 1, L):
                 # 가중치 공유 시
                 if params[i] is params[j]:
-                    print(i, j, "matches")
+                    match_pair = i, j
+                    if match_pair not in match_list:
+                        match_list.append(match_pair)
+                        print(match_pair)
                     grads[i] += grads[j]  # i인덱스에 경사를 더함
                     find_flg = True
                     params.pop(j)

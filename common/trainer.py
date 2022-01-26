@@ -156,6 +156,7 @@ def remove_duplicate(params, grads):
             for j in range(i + 1, L):
                 # 가중치 공유 시
                 if params[i] is params[j]:
+                    print(i, j, "matches")
                     grads[i] += grads[j]  # 경사를 더함
                     find_flg = True
                     params.pop(j)
