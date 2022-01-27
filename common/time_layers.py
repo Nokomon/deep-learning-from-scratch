@@ -320,8 +320,8 @@ class TimeLSTM:
         grads = [0 for _ in range(len(self.grads))]
         for t in reversed(range(T)):
             layer = self.layers[t]
-            dx, dh, dc = layer.backward(dh, dc)
-            dxs[:, t ,:] = dx
+            dx, dh, dc = layer.backward(dhs[:, t, :] + dh, dc)   # 순전파 때 분기 -> 역전파 때 더해줌
+            dxs[:, t, :] = dx
             for i, grad in enumerate(layer.grads):
                 grads[i] += grad
         for i, grad in enumerate(grads):

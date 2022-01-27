@@ -29,7 +29,7 @@ optimizer = SGD(lr)
 trainer = RnnlmTrainer(model, optimizer)
 
 # gradient clipping
-trainer.fit(xs, ts, max_epoch, batch_size, time_size, max_grad, eval_interval=100)
+trainer.fit(xs, ts, max_epoch, batch_size, time_size, max_grad, eval_interval=20)
 trainer.plot(ylim=(0, 500))
 
 # evaluate via test dataset
