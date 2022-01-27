@@ -330,4 +330,22 @@ class TimeLSTM:
         self.dh = dh
         return dxs
 
+class TimeDropout:
+    def __init__(self, ratio=0.5):
+        self.params, self.grads = [], []
+        self.ratio = ratio
+        self.mask = None
+        self.train_flg = True
+
+    def forward(self, xs):
+        if self.train_flg:
+            flg = np.random.randn(*xs.shape) > self.ratio
+            scale = 1 / (1.0 - self.ratio)
+            self.mask = flg.astype(np.float32) * scale
+            return xs * self.mask
+        else:
+            return xs
+
+    def backward(self, dout):
+        return dout * self.mask
 

@@ -1,8 +1,11 @@
 import numpy as np
-V, D = 2, 2
 
-W_embed = np.random.randn((V, D), dtype='f')
-print(type(W_embed))
 
-A = np.random.randn((V, D)).astype('f')
-print(type(W_embed) == type(A))
+random = np.random.randn(30, 30)
+# print(random)
+flg = random > 0.5
+# print(flg)
+print(flg.sum())
+
+# print(random[flg])
+print(len(random[flg]))
