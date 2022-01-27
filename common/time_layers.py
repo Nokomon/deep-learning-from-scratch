@@ -1,4 +1,3 @@
-import faker
 from common.functions import *
 from common.layers import *
 from common.np import *
