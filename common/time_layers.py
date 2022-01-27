@@ -241,7 +241,7 @@ class LSTM:
         # 2. 아핀 변환, 슬라이싱, 그리고 input으로 넣을 준비
         affined = np.matmul(x, Wx) + np.matmul(h_prev, Wh) + b
         f, g, i, o = affined[:, :H], affined[:, H:2*H], affined[:, 2*H:3*H], affined[:, 3*H:]
-        f, g, i, o = softmax(f), np.tanh(g), softmax(i), softmax(o)
+        f, g, i, o = sigmoid(f), np.tanh(g), sigmoid(i), sigmoid(o)
 
         # 3. LSTM 본격 구현
         c_next = (c_prev * f) + (g * i)
