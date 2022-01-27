@@ -251,7 +251,6 @@ class LSTM:
 
     def backward(self, dh_next, dc_next):
         Wx, Wh, b = self.params
-        H, _ = Wh.shape
         x, h_prev, c_prev, f, g, i, o, c_next = self.cache
 
         do = dh_next * np.tanh(c_next)
@@ -297,14 +296,15 @@ class TimeLSTM:
         N, T, D = xs.shape
         H = Wh.shape[0]
 
+        if not self.stateful or self.h is None:
+            self.h = np.zeros((N, H), dtype='f')
+        if not self.stateful or self.c is None:
+            self.c = np.zeros((N, H), dtype='f')
+
         hs = np.zeros((N, T, H), dtype='f')
         for t in range(T):
             layer = LSTM(Wx, Wh, b)
             self.layers.append(layer)
-            if not self.stateful or self.h is None:
-                self.h = np.zeros((N, H), dtype='f')
-            if not self.stateful or self.c is None:
-                self.c = np.zeros((N, H), dtype='f')
             self.h, self.c = layer.forward(xs[:, t, :], self.h, self.c)
             hs[:, t, :] = self.h
 
