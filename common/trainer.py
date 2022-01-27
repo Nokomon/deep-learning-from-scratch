@@ -2,6 +2,8 @@ import numpy as np
 import time
 import matplotlib.pyplot as plt
 
+from common.util import *
+
 class Trainer:
     def __init__(self, model, optimizer):
         self.model = model

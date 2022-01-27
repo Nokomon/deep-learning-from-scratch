@@ -230,56 +230,51 @@ class TimeEmbedding:
 
 class LSTM:
     def __init__(self, Wx, Wh, b):
-        # 주의: 여기 Wx, Wh, b는 4개분(f, g, i ,o)이 이미 stacked 되어 있음
         self.params = [Wx, Wh, b]
         self.grads = [np.zeros_like(i) for i in self.params]
         self.cache = None
 
     def forward(self, x, h_prev, c_prev):
+        # 1. 항상 params 불러오고, 차원 정의
         Wx, Wh, b = self.params
-        _, H = h_prev.shape
+        N, H = h_prev.shape
 
-        # 아핀 변환
+        # 2. 아핀 변환, 슬라이싱, 그리고 input으로 넣을 준비
         affined = np.matmul(x, Wx) + np.matmul(h_prev, Wh) + b
-        f, g, i, o = affined[:H], affined[H: 2*H], affined[2*H: 3*H], affined[3*H:]
-        f, g, i ,o = sigmoid(f), np.tanh(g), sigmoid(i), sigmoid(o)
+        f, g, i, o = affined[:, :H], affined[:, H:2*H], affined[:, 2*H:3*H], affined[:, 3*H:]
+        f, g, i, o = softmax(f), np.tanh(g), softmax(i), softmax(o)
 
+        # 3. LSTM 본격 구현
         c_next = (c_prev * f) + (g * i)
         h_next = np.tanh(c_next) * o
-        self.cache = x, h_prev, c_prev, i, f, g, o, c_next
+        self.cache = x, h_prev, c_prev, f, g, i, o, c_next
         return h_next, c_next
 
-    # 맞는지 틀린지 LSTM 모두 구현하고 확인해봐야 함!!!!!!
     def backward(self, dh_next, dc_next):
         Wx, Wh, b = self.params
-        x, h_prev, c_prev, i, f, g, o, c_next = self.cache
+        H, _ = Wh.shape
+        x, h_prev, c_prev, f, g, i, o, c_next = self.cache
 
-        dc_ongoing = dc_next + (2 * dh_next * o) * (1 - np.tanh(c_next) ** 2)
-        dc_prev = dc_ongoing * f   # 결과1
-
-        do = 2 * dh_next * np.tanh(c_next)
-        di = dc_ongoing * g
-        dg = dc_ongoing * i
-        df = dc_ongoing * f
-
-        # do, di, dg, df가 sigomid, tanh 통과하였기에 처리
-        do = do * (1 - o) * o
-        di = di * (1 - i) * i
-        dg = dg * (1 - g**2)
-        df = df * (1 - f) * f
+        do = dh_next * np.tanh(c_next)
+        dc_ongoing = dc_next + (1 - np.tanh(c_next)**2) * (dh_next * o)
+        dc_prev = f * dc_ongoing
+        di = g * dc_ongoing
+        dg = i * dc_ongoing
+        df = c_prev * dc_ongoing
 
         daffined = np.hstack((df, dg, di, do))
-
-        dWh = np.dot(h_prev.T, daffined)
-        dWx = np.dot(x.T, daffined)
         db = daffined.sum(axis=0)
 
-        self.grads[0][...] = dWh
-        self.grads[1][...] = dWx
+        dWx = np.matmul(x.T, daffined)
+        dx = np.matmul(daffined, Wx.T)
+
+        dWh = np.matmul(h_prev.T, daffined)
+        dh_prev = np.matmul(daffined, Wh.T)
+
+        self.grads[0][...] = dWx
+        self.grads[1][...] = dWh
         self.grads[2][...] = db
 
-        dx = np.dot(daffined, Wx.T)
-        dh_prev = np.dot(daffined, Wh.T)
         return dx, dh_prev, dc_prev
 
 class TimeLSTM:
@@ -288,48 +283,52 @@ class TimeLSTM:
         self.grads = [np.zeros_like(i) for i in self.params]
         self.stateful = stateful
         self.layers = []
-        self.h, self.c = None, None   # Time계층: 은닉 상태와 기억 셀을 인스턴스 변수로 저장 (Truncated BPTT)
+
         self.dh = None
+        self.h, self.c = None, None
+
+    def set_state(self, h, c=None):
+        self.h, self.c = h, c
+
+    def reset_state(self):
+        self.h, self.c = None, None
 
     def forward(self, xs):
         Wx, Wh, b = self.params
         N, T, D = xs.shape
-        H = Wx.shape[1] // 4   # 그냥 Wh.shape[0] 해도됨
+        H = Wh.shape[0]
 
         hs = np.zeros((N, T, H), dtype='f')
-
-        # 처음 실행했을 때 or stateful하지 않게 간다면
-        if not self.stateful or self.h is None:
-            self.h = np.zeros((N, H), dtype='f')
-        if not self.stateful or self.c is None:
-            self.c = np.zeros((N, H), dtype='f')
-
         for t in range(T):
             layer = LSTM(Wx, Wh, b)
             self.layers.append(layer)
-            self.h, self.c = layer.forward(x[:, t, :], self.h, self.c)
+            if not self.stateful or self.h is None:
+                self.h = np.zeros((N, H), dtype='f')
+            if not self.stateful or self.c is None:
+                self.c = np.zeros((N, H), dtype='f')
+            self.h, self.c = layer.forward(xs[:, t, :], self.h, self.c)
             hs[:, t, :] = self.h
+
         return hs
 
     def backward(self, dhs):
         Wx, Wh, b = self.params
         N, T, H = dhs.shape
         D = Wx.shape[0]
-        dxs = np.zeros((N, T, D), dtype='f')
 
+        dxs = np.zeros((N, T, D), dtype='f')
+        dh, dc = 0, 0
+        grads = [0 for _ in range(len(self.grads))]
         for t in reversed(range(T)):
             layer = self.layers[t]
-            dx, dh, dc = layer.backward(self.h, self.c)
-            dxs[:, t, :] = dx
-
+            dx, dh, dc = layer.backward(dh, dc)
+            dxs[:, t ,:] = dx
             for i, grad in enumerate(layer.grads):
-                self.grads[i][...] = grad
+                grads[i] += grad
+        for i, grad in enumerate(grads):
+            self.grads[i][...] = grad
 
-            self.dh = dh
-            return dxs
+        self.dh = dh
+        return dxs
 
-    def set_state(self, h, c=None, reset=False):
-        if reset:
-            self.h, self.c = None, None
-        else:
-            self.h, self.c = h, c
+
