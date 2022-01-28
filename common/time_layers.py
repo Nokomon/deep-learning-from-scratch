@@ -2,12 +2,13 @@ from common.functions import *
 from common.layers import *
 from common.np import *
 
+
 # RNN cell 한 개
 class RNN:
     def __init__(self, Wx, Wh, b):
         self.params = [Wx, Wh, b]
         self.grads = [np.zeros_like(i) for i in self.params]
-        self.cache = None   # 순전파 결과 저장
+        self.cache = None  # 순전파 결과 저장
 
     # 순전파: 잘 생각해보면 한 셀에 들어가는 요소들은 input(x)과 전 셀의 은닉 생태(h_prev)
     def forward(self, x, h_prev):
@@ -19,11 +20,11 @@ class RNN:
         # 한 셀에서 처리한 정보를 다음 셀로 넘긴다
         return h_next
 
-    def backward(self, dh_next):   # dh_next: 바로 전 셀에서 가져온 역전파값
+    def backward(self, dh_next):  # dh_next: 바로 전 셀에서 가져온 역전파값
         x, h_prev, h_next = self.cache
         Wx, Wh, b = self.params
 
-        dt = dh_next * (1 - h_next**2)   # tanh 역전파
+        dt = dh_next * (1 - h_next ** 2)  # tanh 역전파
         db = np.sum(dt, axis=0)
         dWh = np.matmul(h_prev.T, dt)
         dh_prev = np.matmul(dt, Wh.T)
@@ -36,17 +37,18 @@ class RNN:
         self.grads[2][...] = db
         return dx, dh_prev
 
+
 # T개의 input(x_0 ~ x_T-1)을 받아 T개의 은닉 상태를 반환하는
 # T개의 RNN 셀이 붙어있는 Time RNN 계층 구현
 ### Time 계층을 구현할 때는 항상 dimension 선언하면서 구현할 것 ###
 class TimeRNN:
-    def __init__(self, Wx, Wh, b, stateful=False):   # stateful: 은닉 상태를 인계받을 것인가?
+    def __init__(self, Wx, Wh, b, stateful=False):  # stateful: 은닉 상태를 인계받을 것인가?
         self.params = [Wx, Wh, b]
         self.grads = [np.zeros_like(Wx), np.zeros_like(Wh), np.zeros_like(b)]
-        self.layers = None   # 후에 다수의 RNN 계층을 리스트로 저장하는 용도로 사용
+        self.layers = None  # 후에 다수의 RNN 계층을 리스트로 저장하는 용도로 사용
 
-        self.h = None   # forward 호출 시 마지막 RNN 셀의 hidden state
-        self.dh = None   # backward 호출 시 바로 전 블록의 hidden state gradient(dh_prev)
+        self.h = None  # forward 호출 시 마지막 RNN 셀의 hidden state
+        self.dh = None  # backward 호출 시 바로 전 블록의 hidden state gradient(dh_prev)
         self.stateful = stateful
 
     # 확장성 고려: TimeRNN 게층의 은닉 상태를 설정
@@ -57,9 +59,9 @@ class TimeRNN:
     def reset_state(self):
         self.h = None
 
-    def forward(self, xs):   # xs: T개 분량의 시계열 데이터를 하나로 모음
+    def forward(self, xs):  # xs: T개 분량의 시계열 데이터를 하나로 모음
         Wx, Wh, b = self.params
-        N, T, D = xs.shape   # N: 미니배치 크기, T: T개분량 시계열 데이터, D: 입력벡터 차원수
+        N, T, D = xs.shape  # N: 미니배치 크기, T: T개분량 시계열 데이터, D: 입력벡터 차원수
         D, H = Wx.shape
 
         self.layers = []
@@ -67,14 +69,14 @@ class TimeRNN:
 
         # stateful 하지 않거나, 처음 호출 시
         if not self.stateful or self.h is None:
-            self.h = np.zeros((N, H), dtype='f')   # self.h를 영행렬로 초기화
+            self.h = np.zeros((N, H), dtype='f')  # self.h를 영행렬로 초기화
 
         for t in range(T):
             layer = RNN(Wx, Wh, b)
             x = xs[:, t, :]
             self.h = layer.forward(x, self.h)
-            hs[:, t, :] = self.h   # 각 t마다 은닉 상태 벡터(h) hs에 차곡차곡 저장
-            self.layers.append(layer)   # 역전파 때 사용하기 위해 layer정보 append해서 저장
+            hs[:, t, :] = self.h  # 각 t마다 은닉 상태 벡터(h) hs에 차곡차곡 저장
+            self.layers.append(layer)  # 역전파 때 사용하기 위해 layer정보 append해서 저장
         return hs
 
     def backward(self, dhs):
@@ -82,14 +84,14 @@ class TimeRNN:
         N, T, H = dhs.shape
         D, H = Wx.shape
 
-        dxs = np.zeros((N, T, D), dtype=np.float32)   # 모든 t에 대한 dx를 담을 '그릇'
+        dxs = np.zeros((N, T, D), dtype=np.float32)  # 모든 t에 대한 dx를 담을 '그릇'
         dh = 0
-        grads = [0, 0, 0]   # 각각 dWx, dWh, b의 합을 담을 '그릇'
+        grads = [0, 0, 0]  # 각각 dWx, dWh, b의 합을 담을 '그릇'
 
         # 각 RNN 셀에 대해서
         for t in reversed(range(T)):
             layer = self.layers[t]
-            dx, dh = layer.backward(dhs[:, t, :] + dh)   # 순전파 때 분기 -> 역전파 때 더해줌
+            dx, dh = layer.backward(dhs[:, t, :] + dh)  # 순전파 때 분기 -> 역전파 때 더해줌
             dxs[:, t, :] = dx
 
             # 윗줄의 backward로 인해서 이미 gradient값이 모두 업데이트 되었을 것
@@ -97,7 +99,7 @@ class TimeRNN:
             # 누적으로 계속해서 모든 t에 대해 더해준다
             for i, grad in enumerate(layer.grads):
                 grads[i] += grad
-        
+
         # 위에서 도출된 gradient값을 인스턴스 변수에 덮어쓴다
         for i, grad in enumerate(grads):
             self.grads[i][...] = grad
@@ -109,6 +111,7 @@ class TimeRNN:
 
         return dxs
 
+
 # Time Affine -> T개의 Affine게층 한번에 "하는듯하게"
 # 실제로는 T개의 Affine 꼐층을 사용하지 않고, "그럴듯하게" 함 -> reshape통해서 한번에 행렬곱
 class TimeAffine:
@@ -118,7 +121,7 @@ class TimeAffine:
         self.x = None
 
     def forward(self, x):
-        N, T, D = x.shape   # 실제 구현(RNNLM)에 가서는 N, T, H
+        N, T, D = x.shape  # 실제 구현(RNNLM)에 가서는 N, T, H
         W, b = self.params
 
         """
@@ -130,7 +133,7 @@ class TimeAffine:
             - 그러므로, (NxT, D)라고 하면 '모든'(N, T 모두 고려한 '모든') input을 하나로 모은 것
             - 즉, ndim=2의 형태에서, 모든 input을 불러와서, 각 행은 embedded word vector임을 의미  
         """
-        x_reshape = x.reshape(N*T, -1)
+        x_reshape = x.reshape(N * T, -1)
         out = np.dot(x_reshape, W) + b
         self.x = x
         return out.reshape(N, T, -1)
@@ -140,8 +143,8 @@ class TimeAffine:
         N, T, D = x.shape
         W, b = self.params
 
-        dout = dout.reshape(N*T, -1)
-        x_reshape = x.reshape(N*T, -1)
+        dout = dout.reshape(N * T, -1)
+        x_reshape = x.reshape(N * T, -1)
 
         dW = np.dot(x_reshape.T, dout)
         dx = np.dot(dout, W.T)
@@ -157,28 +160,28 @@ class TimeAffine:
 class TimeSoftmaxWithLoss:
     def __init__(self):
         self.params, self.grads = [], []
-        self.cache = None   # 순전파 후 역전파 처음 시작할 때 순전파 정보 불러오기 위함
+        self.cache = None  # 순전파 후 역전파 처음 시작할 때 순전파 정보 불러오기 위함
 
     def forward(self, xs, ts):
         N, T, V = xs.shape
-        if ts.ndim == 3:   # 정답 레이블이 원핫 벡터인 경우
-            ts = ts.argmax(axis=2)   # 1인 인덱스만 뽑아서 ts에 넣는다 -> 형상: (N, t)
-        mask = (ts >= 0)   # 불린값. 배열로 반환되어, ts와 같은 값인 것만 False. ignore_label 무시하여 작성
+        if ts.ndim == 3:  # 정답 레이블이 원핫 벡터인 경우
+            ts = ts.argmax(axis=2)  # 1인 인덱스만 뽑아서 ts에 넣는다 -> 형상: (N, t)
+        mask = (ts >= 0)  # 불린값. 배열로 반환되어, ts와 같은 값인 것만 False. ignore_label 무시하여 작성
 
         # 배치용과 시계열용을 정리 (reshape) for "효율적인" 계산
-        xs = xs.reshape(N*T, V)   # 3d -> 2d
-        ts = ts.reshape(N*T)   # 2d -> 1d
-        mask = mask.reshape(N*T)
+        xs = xs.reshape(N * T, V)  # 3d -> 2d
+        ts = ts.reshape(N * T)  # 2d -> 1d
+        mask = mask.reshape(N * T)
 
         ys = softmax(xs)
-        ls = np.log(ys[np.arange(N*T), ts])   # 교차 엔트로피(L) 결괏값들
+        ls = np.log(ys[np.arange(N * T), ts])  # 교차 엔트로피(L) 결괏값들
 
         # True를 곱해주면 그대로, False를 곱해주면 0으로
         # 즉, ignore_label에 해당하는 데이터는 손실을 0으로 설정한다.
         ls *= mask
         loss = -np.sum(ls)
-        loss /= mask.sum()   # True인 요소들의 개수로 나눈다
-        
+        loss /= mask.sum()  # True인 요소들의 개수로 나눈다
+
         self.cache = (ts, ys, mask, (N, T, V))
         return loss
 
@@ -187,12 +190,13 @@ class TimeSoftmaxWithLoss:
         ts, ys, mask, (N, T, V) = self.cache
 
         dx = ys
-        dx[np.arange(N*T), ts] -= 1
+        dx[np.arange(N * T), ts] -= 1
         dx *= dout
         dx /= mask.sum()
         dx *= mask[:, np.newaxis]
         dx = dx.reshape((N, T, V))
         return dx
+
 
 class TimeEmbedding:
     def __init__(self, W):
@@ -207,8 +211,8 @@ class TimeEmbedding:
 
         result = np.zeros((N, T, D), dtype='f')
         self.layers = []
-        
-        for t in range(T):   # RNN이 아니기 때문에 reverse 해줄필요 없다. 이건 Embedding 모아놓은 것일뿐
+
+        for t in range(T):  # RNN이 아니기 때문에 reverse 해줄필요 없다. 이건 Embedding 모아놓은 것일뿐
             layer = Embedding(self.W)
             self.layers.append(layer)
             result[:, t, :] = layer.forward(xs[:, t])
@@ -216,16 +220,17 @@ class TimeEmbedding:
         return result
 
     def backward(self, dout):
-        N, T, D = dout.shape   # TimeRNN 역전파 결과
+        N, T, D = dout.shape  # TimeRNN 역전파 결과
 
         gradient = 0
         for t in range(T):
             layer = self.layers[t]
             layer.backward(dout[:, t, :])
-            gradient += layer.grads[0]   # dW
+            gradient += layer.grads[0]  # dW
 
         self.grads[0][...] = gradient
         return
+
 
 class LSTM:
     def __init__(self, Wx, Wh, b):
@@ -254,7 +259,7 @@ class LSTM:
         x, h_prev, c_prev, f, g, i, o, c_next = self.cache
 
         do = dh_next * np.tanh(c_next)
-        dc_ongoing = dc_next + (1 - np.tanh(c_next)**2) * (dh_next * o)
+        dc_ongoing = dc_next + (1 - np.tanh(c_next) ** 2) * (dh_next * o)
         dc_prev = f * dc_ongoing
         di = g * dc_ongoing
         dg = i * dc_ongoing
@@ -280,7 +285,13 @@ class TimeLSTM:
         self.params = [Wx, Wh, b]
         self.grads = [np.zeros_like(i) for i in self.params]
         self.stateful = stateful
-        self.layers = []
+        self.layers = None
+        """
+        forward 메소드를 계속해서 BetterRnnlm(궁극적으론 RnnlmTrainer)에서 호출하게 되는데,
+        이때, self.layers에 LSTM 계층 한 개를 계속해서 append해준다.
+        그러나, self.layers = []로 하게 된다면, 학습이 끝날때까지 리스트에 계속해서 append해주기 때문에
+        빈 리스트가 아닌, None 등으로 초기화시켜 주는 것
+        """
 
         self.dh = None
         self.h, self.c = None, None
@@ -302,10 +313,12 @@ class TimeLSTM:
             self.c = np.zeros((N, H), dtype='f')
 
         hs = np.zeros((N, T, H), dtype='f')
+        self.layers = []
         for t in range(T):
             layer = LSTM(Wx, Wh, b)
-            self.layers.append(layer)
+            # print(f"Forward{t}: {len(self.layers)}")
             self.h, self.c = layer.forward(xs[:, t, :], self.h, self.c)
+            self.layers.append(layer)
             hs[:, t, :] = self.h
 
         return hs
@@ -320,7 +333,7 @@ class TimeLSTM:
         grads = [0 for _ in range(len(self.grads))]
         for t in reversed(range(T)):
             layer = self.layers[t]
-            dx, dh, dc = layer.backward(dhs[:, t, :] + dh, dc)   # 순전파 때 분기 -> 역전파 때 더해줌
+            dx, dh, dc = layer.backward(dhs[:, t, :] + dh, dc)  # 순전파 때 분기 -> 역전파 때 더해줌
             dxs[:, t, :] = dx
             for i, grad in enumerate(layer.grads):
                 grads[i] += grad
@@ -329,6 +342,7 @@ class TimeLSTM:
 
         self.dh = dh
         return dxs
+
 
 class TimeDropout:
     def __init__(self, ratio=0.5):
