@@ -2,9 +2,10 @@ import sys
 sys.path.append('..')
 
 from common.time_layers import *
+from common.base_model import BaseModel
 import pickle
 
-class Rnnlm:
+class Rnnlm(BaseModel):
     def __init__(self, vocab_size=10000, wordvec_size=100, hidden_size=100):
         V, D, H = vocab_size, wordvec_size, hidden_size
 
@@ -51,12 +52,12 @@ class Rnnlm:
     def reset_state(self):
         self.lstm_layer.reset_state()
 
-    def load_save_params(self, mode, file_name='Rnnlm.pkl'):
-        if mode == "save":
-            with open(file_name, 'wb') as f:
-                pickle.dump(self.params, f, -1)
-
-        elif mode == "load":
-            with open(file_name, 'rb') as f:
-                self.params = pickle.load(f)
+    # def load_save_params(self, mode, file_name='Rnnlm.pkl'):
+    #     if mode == "save":
+    #         with open(file_name, 'wb') as f:
+    #             pickle.dump(self.params, f, -1)
+    #
+    #     elif mode == "load":
+    #         with open(file_name, 'rb') as f:
+    #             self.params = pickle.load(f)
 

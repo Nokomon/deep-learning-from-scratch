@@ -1,11 +1,12 @@
 import numpy as np
 
 
-random = np.random.randn(30, 30)
-# print(random)
-flg = random > 0.5
-# print(flg)
-print(flg.sum())
+a = np.arange(10).reshape(2, 5)
+b = np.arange(10).reshape(5, 2)
 
-# print(random[flg])
-print(len(random[flg]))
+r1 = np.matmul(a, b)
+r2 = np.dot(a, b)
+
+print(r1)
+print(r2)
+print(r1 == r2)

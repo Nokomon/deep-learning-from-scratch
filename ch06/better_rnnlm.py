@@ -27,7 +27,7 @@ class BetterRnnlm(BaseModel):
         b_lstm1 = np.zeros(4*H).astype('f')
 
         # LSTM 2: 2층 LSTM의 입력은 1층 LSTM의 은닉 상태임을 고려하여 차원 구성
-        Wx_lstm2 = (np.random.randn(H, 4*H) / np.sqrt(D)).astype('f')
+        Wx_lstm2 = (np.random.randn(H, 4*H) / np.sqrt(H)).astype('f')
         Wh_lstm2 = (np.random.randn(H, 4*H) / np.sqrt(H)).astype('f')
         b_lstm2 = np.zeros(4*H).astype('f')
 

@@ -140,6 +140,7 @@ class RnnlmTrainer:
         plt.xlabel('반복 (x' + str(self.eval_interval) + ')')
         plt.ylabel('퍼플렉서티')
         plt.show()
+        plt.savefig("result.png", dpi=300)
 
 
 # 노션에 정리함

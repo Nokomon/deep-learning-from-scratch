@@ -276,7 +276,7 @@ class LSTM:
         return dx, dh_prev, dc_prev
 
 class TimeLSTM:
-    def __init__(self, Wx, Wh, b, stateful=True):
+    def __init__(self, Wx, Wh, b, stateful=False):
         self.params = [Wx, Wh, b]
         self.grads = [np.zeros_like(i) for i in self.params]
         self.stateful = stateful
