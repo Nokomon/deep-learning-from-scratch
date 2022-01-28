@@ -18,7 +18,7 @@ max_grad = 0.25
 
 # 학습 데이터 읽기
 corpus, word_to_id, id_to_word = ptb.load_data('train')
-corpus_tst, _, _ = ptb.load_data('test')
+corpus_test, _, _ = ptb.load_data('test')
 vocab_size = len(word_to_id)
 xs = corpus[:-1]
 ts = corpus[1:]

@@ -371,3 +371,22 @@ class TimeDropout:
     def backward(self, dout):
         return dout * self.mask
 
+
+class GRU:
+    def __init__(self, Wx, Wh, b):
+        self.params = [Wx, Wh, b]
+        self.grads = [np.zeros_like(i) for i in self.params]
+        self.cache = None
+
+    def forward(self, x, h_prev):
+        Wx, Wh, b = self.params
+        N, D = x.shape
+        H = h_prev.shape[1]
+
+
+
+
+
+
+
+
