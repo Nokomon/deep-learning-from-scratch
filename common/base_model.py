@@ -8,6 +8,7 @@ from common.util import to_gpu, to_cpu
 class BaseModel:
     def __init__(self):
         self.params, self.grads = None, None
+        self.path = "/content/drive/MyDrive/01. Programming/밑시딥/"
 
     def forward(self, *args):
         raise NotImplementedError
@@ -15,7 +16,8 @@ class BaseModel:
     def backward(self, *args):
         raise NotImplementedError
 
-    def save_params(self, file_name=None):
+    # for colab --> mark colab=True
+    def save_params(self, file_name=None, colab=False):
         if file_name is None:
             file_name = self.__class__.__name__ + '.pkl'
 
@@ -23,10 +25,14 @@ class BaseModel:
         if GPU:
             params = [to_cpu(p) for p in params]
 
-        with open(file_name, 'wb') as f:
-            pickle.dump(params, f)
+        if colab:
+            with open(self.path + file_name, 'wb') as f:
+                pickle.dump(params, f)
+        else:
+            with open(file_name, 'wb') as f:
+                pickle.dump(params, f)
 
-    def load_params(self, file_name=None):
+    def load_params(self, file_name=None, colab=False):
         if file_name is None:
             file_name = self.__class__.__name__ + '.pkl'
 
@@ -36,8 +42,12 @@ class BaseModel:
         if not os.path.exists(file_name):
             raise IOError('No file: ' + file_name)
 
-        with open(file_name, 'rb') as f:
-            params = pickle.load(f)
+        if colab:
+            with open(self.path + file_name, 'rb') as f:
+                params = pickle.load(f)
+        else:
+            with open(file_name, 'rb') as f:
+                params = pickle.load(f)
 
         params = [p.astype('f') for p in params]
         if GPU:
