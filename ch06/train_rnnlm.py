@@ -38,4 +38,4 @@ ppl_test = eval_perplexity(model, corpus_test)
 print(f"Test perplexity: {ppl_test}")
 
 # save params
-model.save_params()
+model.save_params(colab=True)

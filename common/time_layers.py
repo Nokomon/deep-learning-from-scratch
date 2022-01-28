@@ -264,8 +264,11 @@ class LSTM:
         dg = i * dc_ongoing
         df = c_prev * dc_ongoing
 
-        ### 이 부분을 추가해주지 않아서 제대로 역전파가 이루어지지 않음 ###
-        df = df * f * (1 - f)
+        """
+        이 부분을 추가해주지 않아서 제대로 역전파가 이루어지지 않음
+        tanh, sigomid등의 역전파를 할 때는 상류의 gradient와 계산 그래프의 역전파를 곱해줘야 함을 인지
+        """
+        df = df * f * (1 - f)   # 상류의 gradient(df)와 계산 그래프의 역전파값 (f * (1 - f))
         dg = dg * (1 - g**2)
         di = di * i * (1 - i)
         do = do * o * (1 - o)
@@ -293,7 +296,7 @@ class TimeLSTM:
         self.layers = None
         """
         forward 메소드를 계속해서 BetterRnnlm(궁극적으론 RnnlmTrainer)에서 호출하게 되는데,
-        이때, self.layers에 LSTM 계층 한 개를 계속해서 append해준다.
+        이때, self.layers에 LSTM 계층 한 개를 계속해서 append 해준다.
         그러나, self.layers = []로 하게 된다면, 학습이 끝날때까지 리스트에 계속해서 append해주기 때문에
         빈 리스트가 아닌, None 등으로 초기화시켜 주는 것
         """

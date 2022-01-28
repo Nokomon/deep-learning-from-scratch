@@ -8,7 +8,6 @@ from common.util import to_gpu, to_cpu
 class BaseModel:
     def __init__(self):
         self.params, self.grads = None, None
-        self.path = "/content/drive/MyDrive/01. Programming/밑시딥/"
 
     def forward(self, *args):
         raise NotImplementedError
@@ -18,6 +17,7 @@ class BaseModel:
 
     # for colab --> mark colab=True
     def save_params(self, file_name=None, colab=False):
+        PATH = "/content/drive/MyDrive/01. Programming/밑시딥/"
         if file_name is None:
             file_name = self.__class__.__name__ + '.pkl'
 
@@ -26,13 +26,14 @@ class BaseModel:
             params = [to_cpu(p) for p in params]
 
         if colab:
-            with open(self.path + file_name, 'wb') as f:
+            with open(PATH + file_name, 'wb') as f:
                 pickle.dump(params, f)
         else:
             with open(file_name, 'wb') as f:
                 pickle.dump(params, f)
 
     def load_params(self, file_name=None, colab=False):
+        PATH = "/content/drive/MyDrive/01. Programming/밑시딥/"
         if file_name is None:
             file_name = self.__class__.__name__ + '.pkl'
 
@@ -43,7 +44,7 @@ class BaseModel:
             raise IOError('No file: ' + file_name)
 
         if colab:
-            with open(self.path + file_name, 'rb') as f:
+            with open(PATH + file_name, 'rb') as f:
                 params = pickle.load(f)
         else:
             with open(file_name, 'rb') as f:

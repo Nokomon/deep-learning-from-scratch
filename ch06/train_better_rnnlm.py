@@ -47,7 +47,7 @@ for epoch in range(max_epoch):
 
     if best_ppl > ppl:
         best_ppl = ppl
-        model.save_params()
+        model.save_params(colab=True)
     else:
         lr = lr / 4
         optimizer.lr = lr
