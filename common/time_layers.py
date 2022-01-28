@@ -373,18 +373,39 @@ class TimeDropout:
 
 
 class GRU:
-    def __init__(self, Wx, Wh, b):
-        self.params = [Wx, Wh, b]
+    def __init__(self, Wx_input, Wh_input, b_input):
+        self.params = [Wx_input, Wh_input, b_input]
         self.grads = [np.zeros_like(i) for i in self.params]
         self.cache = None
 
     def forward(self, x, h_prev):
-        Wx, Wh, b = self.params
-        N, D = x.shape
+        Wx_input, Wh_input, b_input = self.params
         H = h_prev.shape[1]
 
+        Wxz, Wxr, Wx = Wx_input[:, :H], Wx_input[:,  H:2*H], Wx_input[:, 2*H:]
+        Whz, Whr, Wh = Wh_input[:, :H], Wh_input[:, H:2*H], Wh_input[:, 2*H:]
 
+        r = np.matmul(x, Wxr) + np.matmul(h_prev, Whr) + b
+        z = np.matmul(x, Wxz) + np.matmul(h_prev, Whz) + b
+        h_tilde = np.matmul(x, Wxh) + np.matmul((r * h_prev), Wh) + b
 
+        r, z = sigmoid(r), sigmoid(z)
+        h_next = (1 - z) * h_prev + z * np.tanh(h_tilde)
+
+        self.cache = x, h_prev, r, z, h_tilde
+        return h_next
+
+    def backward(self, dh_next):
+        Wx_input, Wh_input, b_input = self.params
+        x, h_prev, r, z, h_tilde = self.cache
+
+        dh_tilde = dh_next * z
+        dz = dh_next * h_tilde - dh_next * h_prev
+        dr = h_prev * dh_tilde * (1 - h_tilde ** 2)
+
+        dh_prev_e1 = (1 - z) * dh_next + r * dh_tilde * (1 - h_tilde ** 2)
+        dh_prev_e2 = dr * r * (1 - r)
+        dh_prev = dh_prev_e1 + dh_prev_e2
 
 
 
