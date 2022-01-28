@@ -1,7 +1,6 @@
 import sys
 sys.path.append('..')
 
-from common.functions import sigmoid
 from common.optimizer import SGD
 from common.trainer import RnnlmTrainer
 from common.util import eval_perplexity

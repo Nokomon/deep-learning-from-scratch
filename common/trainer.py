@@ -38,12 +38,11 @@ class Trainer:
                 # params, grads: remove_duplicate함으로써 len 61 -> 2
                 # print(len(model.params), len(model.grads))
                 params, grads = remove_duplicate(model.params, model.grads)
-                """
-                - params, grads는 리스트 형태로, remove_duplicate를 통해 나온 
-                """
                 # print(len(params), len(grads))
                 # print(f"model.params: {model.params}")
                 # print(f"params: {params}")
+                if max_grad is not None:
+                    clip_grads(grads, max_grad)
 
                 optimizer.update(params, grads)
                 total_loss += loss
