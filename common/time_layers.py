@@ -125,7 +125,7 @@ class TimeAffine:
         W, b = self.params
 
         """
-        [효율이 좋은 이유에 대한 분석]
+        [효율이 좋은 이유에 대한 고찰]
         - (N, T, D)의 형상으로 한다는 것의 의미는 곧 (N, D)의 Affine 계층 input을 T번 호출한다는 의미
         - 이것보다는, (NxT, D)의 형상으로 가져감으로써,  T번 호출할 필요 없이 한 번의 행렬곱으로 처리가능
         - (NxT, D)의 의미를 생각해보자.
@@ -185,7 +185,6 @@ class TimeSoftmaxWithLoss:
         self.cache = (ts, ys, mask, (N, T, V))
         return loss
 
-    # SoftmaxWithLoss의 역전파 보고 다시 볼 것
     def backward(self, dout=1):
         ts, ys, mask, (N, T, V) = self.cache
 
@@ -214,8 +213,8 @@ class TimeEmbedding:
 
         for t in range(T):  # RNN이 아니기 때문에 reverse 해줄필요 없다. 이건 Embedding 모아놓은 것일뿐
             layer = Embedding(self.W)
-            self.layers.append(layer)
             result[:, t, :] = layer.forward(xs[:, t])
+            self.layers.append(layer)
 
         return result
 
@@ -250,7 +249,7 @@ class LSTM:
 
         # 3. LSTM 본격 구현
         c_next = (c_prev * f) + (g * i)
-        h_next = np.tanh(c_next) * o
+        h_next = o * np.tanh(c_next)
         self.cache = x, h_prev, c_prev, f, g, i, o, c_next
         return h_next, c_next
 
@@ -259,11 +258,17 @@ class LSTM:
         x, h_prev, c_prev, f, g, i, o, c_next = self.cache
 
         do = dh_next * np.tanh(c_next)
-        dc_ongoing = dc_next + (1 - np.tanh(c_next) ** 2) * (dh_next * o)
+        dc_ongoing = dc_next + (dh_next * o) * (1 - np.tanh(c_next) ** 2)
         dc_prev = f * dc_ongoing
         di = g * dc_ongoing
         dg = i * dc_ongoing
         df = c_prev * dc_ongoing
+
+        ### 이 부분을 추가해주지 않아서 제대로 역전파가 이루어지지 않음 ###
+        df = df * f * (1 - f)
+        dg = dg * (1 - g**2)
+        di = di * i * (1 - i)
+        do = do * o * (1 - o)
 
         daffined = np.hstack((df, dg, di, do))
         db = daffined.sum(axis=0)
@@ -318,8 +323,8 @@ class TimeLSTM:
             layer = LSTM(Wx, Wh, b)
             # print(f"Forward{t}: {len(self.layers)}")
             self.h, self.c = layer.forward(xs[:, t, :], self.h, self.c)
-            self.layers.append(layer)
             hs[:, t, :] = self.h
+            self.layers.append(layer)
 
         return hs
 
