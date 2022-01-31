@@ -357,7 +357,7 @@ class TimeDropout:
         self.params, self.grads = [], []
         self.ratio = ratio
         self.mask = None
-        self.train_flg = True
+        self.train_flg = True   # train이 아니라 inference의 경우에는 dropout 해주지 않음
 
     def forward(self, xs):
         if self.train_flg:

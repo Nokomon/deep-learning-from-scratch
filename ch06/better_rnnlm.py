@@ -7,7 +7,7 @@
 """
 
 import sys
-sys.path.append(',,')
+sys.path.append('..')
 
 from common.time_layers import *
 from common.np import *
@@ -43,7 +43,7 @@ class BetterRnnlm(BaseModel):
             TimeDropout(dropout_ratio),
             TimeLSTM(Wx_lstm2, Wh_lstm2, b_lstm2, stateful=True),
             TimeDropout(dropout_ratio),
-            TimeAffine(W_embed.T, b_affine)
+            TimeAffine(W_embed.T, b_affine)   # 가중치 공유
         ]
 
         self.loss_layer = TimeSoftmaxWithLoss()
