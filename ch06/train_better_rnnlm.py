@@ -39,12 +39,15 @@ optimizer = SGD(lr)
 trainer = RnnlmTrainer(model, optimizer)
 
 best_ppl = float('inf')
+ppl_list = []   # to check all perplexity scores
 for epoch in range(max_epoch):
     trainer.fit(xs, ts, max_epoch=1, batch_size=batch_size, time_size=time_size, max_grad=max_grad)
     model.reset_state()
     ppl = eval_perplexity(model, corpus_val)
+    ppl_list.append(ppl)
     print(f"Evaluation Perplexity: {ppl}")
-
+    print(f"Perplexity scores up to epoch {epoch+1} are as follows:")
+    print(f"{ppl_list}")
     if best_ppl > ppl:
         best_ppl = ppl
         model.save_params(colab=True)
