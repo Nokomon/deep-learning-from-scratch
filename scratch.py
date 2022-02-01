@@ -1,15 +1,10 @@
-import sys, os
+import numpy as np
 
-sys.path.append(os.getcwd())
-print(sys.path)
+a = np.random.rand(2, 5)
+print(a > 0.5)
+a = a > 0.5
+print(a.sum())
 
-
-sys.path.append('..')
-print(sys.path)
-print(os.pardir)
-sys.path.append(os.pardir)
-print(sys.path)
-
-print(sys.path[-1])
-print(sys.path[-2])
-print(sys.path[-1] == sys.path[-2])
+b = np.random.randn(2, 5)
+b = b > 0.5
+print(b.sum())

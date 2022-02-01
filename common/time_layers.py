@@ -161,15 +161,12 @@ class TimeSoftmaxWithLoss:
     def __init__(self):
         self.params, self.grads = [], []
         self.cache = None  # 순전파 후 역전파 처음 시작할 때 순전파 정보 불러오기 위함
-        self.ignore_label = -1
 
     def forward(self, xs, ts):
         N, T, V = xs.shape
         if ts.ndim == 3:  # 정답 레이블이 원핫 벡터인 경우
             ts = ts.argmax(axis=2)  # 1인 인덱스만 뽑아서 ts에 넣는다 -> 형상: (N, t)
-        # mask = (ts >= 0)  # 불린값. 배열로 반환되어, ts와 같은 값인 것만 False. ignore_label 무시하여 작성
-        mask = (ts != self.ignore_label)
-
+        mask = (ts >= 0)  # 불린값. 배열로 반환되어, ts와 같은 값인 것만 False. ignore_label 무시하여 작성
         # 배치용과 시계열용을 정리 (reshape) for "효율적인" 계산
         xs = xs.reshape(N * T, V)  # 3d -> 2d
         ts = ts.reshape(N * T)  # 2d -> 1d
@@ -363,7 +360,7 @@ class TimeDropout:
 
     def forward(self, xs):
         if self.train_flg:
-            flg = np.random.randn(*xs.shape) > self.ratio
+            flg = np.random.rand(*xs.shape) > self.ratio   # randn이 아님.... 균일분포 정규분포를 따르도록
             scale = 1 / (1.0 - self.ratio)
             self.mask = flg.astype(np.float32) * scale
             return xs * self.mask
@@ -408,8 +405,4 @@ class GRU:
         dh_prev_e1 = (1 - z) * dh_next + r * dh_tilde * (1 - h_tilde ** 2)
         dh_prev_e2 = dr * r * (1 - r)
         dh_prev = dh_prev_e1 + dh_prev_e2
-
-
-
-
 
