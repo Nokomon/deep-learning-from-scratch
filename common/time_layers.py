@@ -371,38 +371,154 @@ class TimeDropout:
         return dout * self.mask
 
 
+# class GRU:
+#     def __init__(self, Wx_input, Wh_input, b_input):
+#         self.params = [Wx_input, Wh_input, b_input]
+#         self.grads = [np.zeros_like(i) for i in self.params]
+#         self.cache = None
+#
+#     def forward(self, x, h_prev):
+#         Wx_input, Wh_input, b_input = self.params
+#         H = h_prev.shape[1]
+#
+#         Wxz, Wxr, Wx = Wx_input[:, :H], Wx_input[:,  H:2*H], Wx_input[:, 2*H:]
+#         Whz, Whr, Wh = Wh_input[:, :H], Wh_input[:, H:2*H], Wh_input[:, 2*H:]
+#
+#         r = np.matmul(x, Wxr) + np.matmul(h_prev, Whr) + b
+#         z = np.matmul(x, Wxz) + np.matmul(h_prev, Whz) + b
+#         h_tilde = np.matmul(x, Wxh) + np.matmul((r * h_prev), Wh) + b
+#
+#         r, z = sigmoid(r), sigmoid(z)
+#         h_next = (1 - z) * h_prev + z * np.tanh(h_tilde)
+#
+#         self.cache = x, h_prev, r, z, h_tilde
+#         return h_next
+#
+#     def backward(self, dh_next):
+#         Wx_input, Wh_input, b_input = self.params
+#         x, h_prev, r, z, h_tilde = self.cache
+#
+#         dh_tilde = dh_next * z
+#         dz = dh_next * h_tilde - dh_next * h_prev
+#         dr = h_prev * dh_tilde * (1 - h_tilde ** 2)
+#
+#         dh_prev_e1 = (1 - z) * dh_next + r * dh_tilde * (1 - h_tilde ** 2)
+#         dh_prev_e2 = dr * r * (1 - r)
+#         dh_prev = dh_prev_e1 + dh_prev_e2
+
 class GRU:
-    def __init__(self, Wx_input, Wh_input, b_input):
-        self.params = [Wx_input, Wh_input, b_input]
-        self.grads = [np.zeros_like(i) for i in self.params]
+    def __init__(self, Wx, Wh):
+        '''
+
+        Parameters
+        ----------
+        Wx: 입력 x에 대한 가중치 매개변수(3개 분의 가중치가 담겨 있음)
+        Wh: 은닉 상태 h에 대한 가중치 매개변수(3개 분의 가중치가 담겨 있음)
+        '''
+        self.Wx, self.Wh = Wx, Wh
+        self.dWx, self.dWh = None, None
         self.cache = None
 
     def forward(self, x, h_prev):
-        Wx_input, Wh_input, b_input = self.params
-        H = h_prev.shape[1]
+        H, H3 = self.Wh.shape
+        Wxz, Wxr, Wx = self.Wx[:, :H], self.Wx[:, H:2 * H], self.Wx[:, 2 * H:]
+        Whz, Whr, Wh = self.Wh[:, :H], self.Wh[:, H:2 * H], self.Wh[:, 2 * H:]
 
-        Wxz, Wxr, Wx = Wx_input[:, :H], Wx_input[:,  H:2*H], Wx_input[:, 2*H:]
-        Whz, Whr, Wh = Wh_input[:, :H], Wh_input[:, H:2*H], Wh_input[:, 2*H:]
+        z = sigmoid(np.dot(x, Wxz) + np.dot(h_prev, Whz))
+        r = sigmoid(np.dot(x, Wxr) + np.dot(h_prev, Whr))
+        h_hat = np.tanh(np.dot(x, Wx) + np.dot(r*h_prev, Wh))
+        h_next = (1-z) * h_prev + z * h_hat
 
-        r = np.matmul(x, Wxr) + np.matmul(h_prev, Whr) + b
-        z = np.matmul(x, Wxz) + np.matmul(h_prev, Whz) + b
-        h_tilde = np.matmul(x, Wxh) + np.matmul((r * h_prev), Wh) + b
+        self.cache = (x, h_prev, z, r, h_hat)
 
-        r, z = sigmoid(r), sigmoid(z)
-        h_next = (1 - z) * h_prev + z * np.tanh(h_tilde)
-
-        self.cache = x, h_prev, r, z, h_tilde
         return h_next
 
     def backward(self, dh_next):
-        Wx_input, Wh_input, b_input = self.params
-        x, h_prev, r, z, h_tilde = self.cache
+        H, H3 = self.Wh.shape
+        Wxz, Wxr, Wx = self.Wx[:, :H], self.Wx[:, H:2 * H], self.Wx[:, 2 * H:]
+        Whz, Whr, Wh = self.Wh[:, :H], self.Wh[:, H:2 * H], self.Wh[:, 2 * H:]
+        x, h_prev, z, r, h_hat = self.cache
 
-        dh_tilde = dh_next * z
-        dz = dh_next * h_tilde - dh_next * h_prev
-        dr = h_prev * dh_tilde * (1 - h_tilde ** 2)
+        dh_hat =dh_next * z
+        dh_prev = dh_next * (1-z)
 
-        dh_prev_e1 = (1 - z) * dh_next + r * dh_tilde * (1 - h_tilde ** 2)
-        dh_prev_e2 = dr * r * (1 - r)
-        dh_prev = dh_prev_e1 + dh_prev_e2
+        # tanh
+        dt = dh_hat * (1 - h_hat ** 2)
+        dWh = np.dot((r * h_prev).T, dt)
+        dhr = np.dot(dt, Wh.T)
+        dWx = np.dot(x.T, dt)
+        dx = np.dot(dt, Wx.T)
+        dh_prev += r * dhr
 
+        # update gate(z)
+        dz = dh_next * h_hat - dh_next * h_prev
+        dt = dz * z * (1-z)
+        dWhz = np.dot(h_prev.T, dt)
+        dh_prev += np.dot(dt, Whz.T)
+        dWxz = np.dot(x.T, dt)
+        dx += np.dot(dt, Wxz.T)
+
+        # rest gate(r)
+        dr = dhr * h_prev
+        dt = dr * r * (1-r)
+        dWhr = np.dot(h_prev.T, dt)
+        dh_prev += np.dot(dt, Whr.T)
+        dWxr = np.dot(x.T, dt)
+        dx += np.dot(dt, Wxr.T)
+
+        self.dWx = np.hstack((dWxz, dWxr, dWx))
+        self.dWh = np.hstack((dWhz, dWhr, dWh))
+
+        return dx, dh_prev
+
+
+class TimeGRU:
+    def __init__(self, Wx, Wh, stateful=False):
+        self.Wx, self.Wh = Wx, Wh
+        self.dWx, self.dWh = None, None
+        self.layers = None
+        self.h, self.dh = None, None
+        self.stateful = stateful
+
+    def forward(self, xs):
+        N, T, D = xs.shape
+        H, H3 = self.Wh.shape
+
+        self.layers = []
+        hs = np.empty((N, T, H), dtype='f')
+
+        if not self.stateful or self.h is None:
+            self.h = np.zeros((N, H), dtype='f')
+
+        for t in range(T):
+            layer = GRU(self.Wx, self.Wh)
+            self.h = layer.forward(xs[:, t, :], self.h)
+            hs[:, t, :] = self.h
+            self.layers.append(layer)
+
+        return hs
+
+    def backward(self, dhs):
+        N, T, H = dhs.shape
+        D = self.Wx.shape[0]
+
+        dxs = np.empty((N, T, D), dtype='f')
+        self.dWx, self.dWh = 0, 0
+
+        dh = 0
+        for t in reversed(range(T)):
+            layer = self.layers[t]
+            dx, dh = layer.backward(dhs[:, t, :] + dh)
+
+            dxs[:, t, :] = dx
+            self.dWx += layer.dWx
+            self.dWh += layer.dWh
+
+        self.dh = dh
+        return dxs
+
+    def set_state(self, h):
+        self.h = h
+
+    def reset_state(self):
+        self.h = None
