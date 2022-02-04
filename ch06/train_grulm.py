@@ -19,7 +19,7 @@ time_size = 35
 lr = 20.0
 max_epoch = 40
 max_grad = 0.25
-dropout = 0.
+dropout = 0.5
 
 # 학습 데이터 읽기
 corpus, word_to_id, id_to_word = ptb.load_data('train')
