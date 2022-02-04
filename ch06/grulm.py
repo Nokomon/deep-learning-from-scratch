@@ -32,9 +32,9 @@ class Grulm(BaseModel):
         self.layers = [
             TimeEmbedding(embed_W),
             TimeDropout(dropout_ratio),
-            TimeGRU(gru_Wx1, gru_Wh1, gru_b1, stateful=True),
+            TimeGRU(gru_Wx1, gru_Wh1, stateful=True),
             TimeDropout(dropout_ratio),
-            TimeGRU(gru_Wx2, gru_Wh2, gru_b2, stateful=True),
+            TimeGRU(gru_Wx2, gru_Wh2, stateful=True),
             TimeDropout(dropout_ratio),
             TimeAffine(embed_W.T, affine_b)  # weight tying!!
         ]

@@ -4,13 +4,13 @@ sys.path.append('..')
 from common import config
 # GPU에서 실행하려면 아래 주석을 해제하세요(CuPy 필요).
 # ==============================================
-config.GPU = True
+# config.GPU = True
 # ==============================================
 from common.optimizer import SGD
 from common.trainer import RnnlmTrainer
 from common.util import eval_perplexity, to_gpu
 from dataset import ptb
-from grulm import Grulm
+from 구현.ch06.grulm import Grulm
 
 
 # 하이퍼파라미터 설정
@@ -44,7 +44,7 @@ trainer = RnnlmTrainer(model, optimizer)
 best_ppl = float('inf')
 for epoch in range(max_epoch):
     trainer.fit(xs, ts, max_epoch=1, batch_size=batch_size,
-                time_size=time_size, max_grad=max_grad)
+                time_size=time_size, max_grad=max_grad, eval_interval=1)
 
     model.reset_state()
     ppl = eval_perplexity(model, corpus_val)
