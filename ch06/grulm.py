@@ -7,14 +7,6 @@ from common.base_model import BaseModel
 
 
 class Grulm(BaseModel):
-    '''
-     LSTM 계층을 2개 사용하고 각 층에 드롭아웃을 적용한 모델이다.
-     아래 [1]에서 제안한 모델을 기초로 하였고, [2]와 [3]의 가중치 공유(weight tying)를 적용했다.
-
-     [1] Recurrent Neural Network Regularization (https://arxiv.org/abs/1409.2329)
-     [2] Using the Output Embedding to Improve Language Models (https://arxiv.org/abs/1608.05859)
-     [3] Tying Word Vectors and Word Classifiers (https://arxiv.org/pdf/1611.01462.pdf)
-    '''
     def __init__(self, vocab_size=10000, wordvec_size=650,
                  hidden_size=650, dropout_ratio=0.5):
         V, D, H = vocab_size, wordvec_size, hidden_size

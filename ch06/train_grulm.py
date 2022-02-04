@@ -2,7 +2,7 @@
 import sys
 sys.path.append('..')
 from common import config
-config.GPU = True
+# config.GPU = True
 
 from common.optimizer import SGD
 from common.trainer import RnnlmTrainer

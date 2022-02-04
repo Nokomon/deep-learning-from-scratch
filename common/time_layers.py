@@ -383,12 +383,13 @@ class GRU:
 
         Wxz, Wxr, Wx = Wx_input[:, :H], Wx_input[:,  H:2*H], Wx_input[:, 2*H:]
         Whz, Whr, Wh = Wh_input[:, :H], Wh_input[:, H:2*H], Wh_input[:, 2*H:]
+        bz, br, bh = b_input[:H], b_input[H:2*H], b_input[2*H:]
 
-        r = np.matmul(x, Wxr) + np.matmul(h_prev, Whr) + b
-        z = np.matmul(x, Wxz) + np.matmul(h_prev, Whz) + b
+        r = np.matmul(x, Wxr) + np.matmul(h_prev, Whr) + br   # matmul result: (20, 650)
+        z = np.matmul(x, Wxz) + np.matmul(h_prev, Whz) + bz
         r, z = sigmoid(r), sigmoid(z)
 
-        h_tilde = np.matmul(x, Wxh) + np.matmul((r * h_prev), Wh) + b
+        h_tilde = np.matmul(x, Wx) + np.matmul((r * h_prev), Wh) + bh
         h_next = (1 - z) * h_prev + z * np.tanh(h_tilde)
 
         self.cache = x, h_prev, r, z, h_tilde
@@ -396,43 +397,49 @@ class GRU:
 
     def backward(self, dh_next):
         Wx_input, Wh_input, b_input = self.params
+        H = Wh_input.shape[0]
+        Wxz, Wxr, Wx = Wx_input[:, :H], Wx_input[:,  H:2*H], Wx_input[:, 2*H:]
+        Whz, Whr, Wh = Wh_input[:, :H], Wh_input[:, H:2*H], Wh_input[:, 2*H:]
+        # bz, br, bh = b_input[:H], b_input[H:2*H], b_input[2*H:]
+
         x, h_prev, r, z, h_tilde = self.cache
 
         dh_prev = dh_next * (1 - z)   # to be updated
         dh_tilde = dh_next * z
         dz = dh_next * h_tilde - dh_next * h_prev
-        dz_passed = dz * z * (1 - z)
 
         # gradients connected to tanh
         dWh_ongoing = dh_tilde * (1 - h_tilde ** 2)
+        db = dWh_ongoing   # to be updated
         dWh = np.matmul((r * h_prev).T, dWh_ongoing)
-        dWx = np,matmul(x.T, dWh_ongoing)
-        dx = np,matmul(dWh_ongoing, Wx.T)   # to be updated
+        dWx = np.matmul(x.T, dWh_ongoing)
+        dx = np.matmul(dWh_ongoing, Wx.T)   # to be updated
         dr_ongoing = np.matmul(dWh_ongoing, Wh.T)
         dh_prev = dh_prev + h_prev * r * dr_ongoing   # update dh_prev
 
         # gradients connected to the REST(r) gate
         dr = dr_ongoing * h_prev
         dr_passed = dr * r * (1 - r)
+        dbr = dr_passed
         dWhr = np.matmul(h_prev.T, dr_passed)
         dh_prev = dh_prev + np.matmul(dr_passed, Whr.T)   # update dh_prev
         dx = dx + np.matmul(dr_passed, Wxr.T)   # update dx
         dWxr = np.matmul(x.T, dr_passed)
 
         # gradients connected to the UPDATE(z) gate
+        dz_passed = dz * z * (1 - z)
+        dbz = dz_passed
         dh_prev = dh_prev + np.matmul(dz_passed, Whz.T)   # update dh_prev
         dWhz = np.matmul(h_prev.T, dz_passed)
         dx = dx + np.matmul(dz_passed, Wxz.T)   # update dx
         dWxz = np.matmul(x.T, dz_passed)
 
-
-        # the gradient of the bias
-        db_input = dWh_ongoing + dz_passed + dr_passed
-
         # horizontally stack the intermediate results
-        # in order to deduce the final gradients of the inputs (dWx_input, dWh_input)
+        # in order to deduce the final gradients of the inputs (dWx_input, dWh_input, db_input)
         dWx_input = np.hstack((dWxz, dWxr, dWx))
         dWh_input = np.hstack((dWhz, dWhr, dWh))
+        db_input = np.hstack((dbz, dbr, db))
+        db_input = db_input.sum(axis=0)
 
         self.grads[0][...] = dWx_input
         self.grads[1][...] = dWh_input
@@ -453,7 +460,7 @@ class TimeGRU:
     def forward(self, xs):
         Wx, Wh, b = self.params
         N, T, D = xs.shape
-        W = Wh.shape[0]
+        H = Wh.shape[0]
 
         self.layers = []
         hs = np.zeros((N, T, H), dtype='f')
