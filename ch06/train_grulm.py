@@ -2,15 +2,13 @@
 import sys
 sys.path.append('..')
 from common import config
-# GPU에서 실행하려면 아래 주석을 해제하세요(CuPy 필요).
-# ==============================================
-# config.GPU = True
-# ==============================================
+config.GPU = True
+
 from common.optimizer import SGD
 from common.trainer import RnnlmTrainer
 from common.util import eval_perplexity, to_gpu
 from dataset import ptb
-from 구현.ch06.grulm import Grulm
+from grulm import Grulm
 
 
 # 하이퍼파라미터 설정
@@ -21,7 +19,7 @@ time_size = 35
 lr = 20.0
 max_epoch = 40
 max_grad = 0.25
-dropout = 0.5
+dropout = 0.
 
 # 학습 데이터 읽기
 corpus, word_to_id, id_to_word = ptb.load_data('train')
