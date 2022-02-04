@@ -442,7 +442,60 @@ class GRU:
 
 
 class TimeGRU:
-    pass
+    def __init__(self, Wx, Wh, b, stateful=True):
+        self.params = [Wx, Wh, b]
+        self.grads = [np.zeros_like(i) for i in self.params]
+        self.layers = None
+
+        self.h, self.dh = None, None
+        self.stateful = stateful
+
+    def forward(self, xs):
+        Wx, Wh, b = self.params
+        N, T, D = xs.shape
+        W = Wh.shape[0]
+
+        self.layers = []
+        hs = np.zeros((N, T, H), dtype='f')
+
+        if not self.stateful or self.h is None:
+            self.h = np.zeros((N, H), dtype='f')
+
+        for t in range(T):
+            layer = GRU(Wx, Wh, b)
+            h = layer.forward(xs[:, t, :], self.h)
+            hs[:, t, :] = h
+            self.layers.append(layer)
+
+        return hs
+
+    def backward(self, dhs):
+        Wx, Wh, b = self.params
+        N, T, H = dhs.shape
+        D = Wx.shape[0]
+
+        dxs = np.zeros((N, T, D), dtype='f')
+        dh = 0
+        grads = [0 for _ in range(len(self.grads))]
+
+        for t in reversed(range(T)):
+            layer = self.layers[t]
+            dx, dh = layer.backward(dhs[:, t, :] + dh)
+            dxs[:, t, :] = dx
+
+            for i, grad in enumerate(layer.grads):
+                grads[i] += grad
+
+        for i, grad in enumerate(grads):
+            self.grads[i][...] = grad
+        self.dh = dh
+        return dxs
+
+    def set_state(self, h):
+        self.h = h
+
+    def reset_state(self):
+        self.h = None
 
 
 
