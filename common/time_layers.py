@@ -390,7 +390,8 @@ class GRU:
         r, z = sigmoid(r), sigmoid(z)
 
         h_tilde = np.matmul(x, Wx) + np.matmul((r * h_prev), Wh) + bh
-        h_next = (1 - z) * h_prev + z * np.tanh(h_tilde)
+        h_tilde = np.tanh(h_tilde)
+        h_next = (1 - z) * h_prev + z * h_tilde
 
         self.cache = x, h_prev, r, z, h_tilde
         return h_next
