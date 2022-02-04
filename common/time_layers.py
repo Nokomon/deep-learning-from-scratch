@@ -440,6 +440,13 @@ class GRU:
         dWh_input = np.hstack((dWhz, dWhr, dWh))
         db_input = np.hstack((dbz, dbr, db))
         db_input = db_input.sum(axis=0)
+        # print(dWxz.shape)
+
+        """
+        [Memo]
+        - dWx_input.shape: (650, 1950) (equal to dWh_input)
+        - db_input.shape: (20, 1950) (currently) -> should be (1950,)
+        """
 
         self.grads[0][...] = dWx_input
         self.grads[1][...] = dWh_input
