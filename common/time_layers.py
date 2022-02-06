@@ -401,7 +401,6 @@ class GRU:
         H = Wh_input.shape[0]
         Wxz, Wxr, Wx = Wx_input[:, :H], Wx_input[:,  H:2*H], Wx_input[:, 2*H:]
         Whz, Whr, Wh = Wh_input[:, :H], Wh_input[:, H:2*H], Wh_input[:, 2*H:]
-        # bz, br, bh = b_input[:H], b_input[H:2*H], b_input[2*H:]
 
         x, h_prev, r, z, h_tilde = self.cache
 
@@ -416,7 +415,8 @@ class GRU:
         dWx = np.matmul(x.T, dWh_ongoing)
         dx = np.matmul(dWh_ongoing, Wx.T)   # to be updated
         dr_ongoing = np.matmul(dWh_ongoing, Wh.T)
-        dh_prev = dh_prev + h_prev * r * dr_ongoing   # update dh_prev
+        # dh_prev = dh_prev + h_prev * r * dr_ongoing   # update dh_prev
+        dh_prev = dh_prev + r * dr_ongoing
 
         # gradients connected to the REST(r) gate
         dr = dr_ongoing * h_prev
@@ -478,8 +478,8 @@ class TimeGRU:
 
         for t in range(T):
             layer = GRU(Wx, Wh, b)
-            h = layer.forward(xs[:, t, :], self.h)
-            hs[:, t, :] = h
+            self.h = layer.forward(xs[:, t, :], self.h)
+            hs[:, t, :] = self.h
             self.layers.append(layer)
 
         return hs
