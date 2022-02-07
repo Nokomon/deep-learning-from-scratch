@@ -14,7 +14,7 @@ from common.np import *
 from common.base_model import BaseModel
 
 class BetterRnnlm(BaseModel):
-    def __init__(self, vocab_size, wordvec_size, hidden_size, dropout_ratio):
+    def __init__(self, vocab_size=10000, wordvec_size=650, hidden_size=650, dropout_ratio=0.5):
         V, D, H = vocab_size, wordvec_size, hidden_size
 
         ### Initialize respective layer parameters ###

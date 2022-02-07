@@ -325,6 +325,11 @@ class TimeLSTM:
             layer = LSTM(Wx, Wh, b)
             # print(f"Forward{t}: {len(self.layers)}")
             self.h, self.c = layer.forward(xs[:, t, :], self.h, self.c)
+            """
+            문제가 발생했던 요인이, 위를 h, c로 해줬기 때문이다.
+            self.h, self.c로 둬야 for문을 돌면서 "업데이트된" h, c값이 계속 들어가는건데,
+            처음 넣은 self.h, self.c가 계속 들어가니 맥락 정보가 당연히 다음 셀로 전달이 안됐던 것...
+            """
             hs[:, t, :] = self.h
             self.layers.append(layer)
 
@@ -360,7 +365,11 @@ class TimeDropout:
 
     def forward(self, xs):
         if self.train_flg:
-            flg = np.random.rand(*xs.shape) > self.ratio   # randn이 아님.... 균일분포 정규분포를 따르도록
+            flg = np.random.rand(*xs.shape) > self.ratio
+            """
+            randn이 아니라 rand를 써야 균일분포에서 뽑아옴.
+            가우시안 분포에서 뽑아왔기에 제대로 masking이 되지 않아서 과적합이 발생했던 것.
+            """
             scale = 1 / (1.0 - self.ratio)
             self.mask = flg.astype(np.float32) * scale
             return xs * self.mask

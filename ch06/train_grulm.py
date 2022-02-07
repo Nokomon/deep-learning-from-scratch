@@ -30,6 +30,7 @@ if config.GPU:
     corpus = to_gpu(corpus)
     corpus_val = to_gpu(corpus_val)
     corpus_test = to_gpu(corpus_test)
+    use_colab = True
 
 vocab_size = len(word_to_id)
 xs = corpus[:-1]
@@ -46,11 +47,11 @@ for epoch in range(max_epoch):
 
     model.reset_state()
     ppl = eval_perplexity(model, corpus_val)
-    print('검증 퍼플렉서티: ', ppl)
+    print('Perplexity on Evaluation Data: ', ppl)
 
     if best_ppl > ppl:
         best_ppl = ppl
-        model.save_params()
+        model.save_params(colab=use_colab)
     else:
         lr /= 4.0
         optimizer.lr = lr
@@ -62,4 +63,4 @@ for epoch in range(max_epoch):
 # 테스트 데이터로 평가
 model.reset_state()
 ppl_test = eval_perplexity(model, corpus_test)
-print('테스트 퍼플렉서티: ', ppl_test)
+print('Perplexity on Test Data: ', ppl_test)
