@@ -19,6 +19,7 @@ def _update_vocab(txt):
             id_to_char[tmp_id] = char
 
 
+# 텍스트를 문자ID로 변환하고, 이를 훈련/테이스트 데이터로 나눠 반환
 def load_data(file_name='addition.txt', seed=1984):
     file_path = os.path.dirname(os.path.abspath(__file__)) + '/' + file_name
 

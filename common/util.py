@@ -209,3 +209,52 @@ def eval_perplexity(model, corpus, batch_size=10, time_size=35):
     print('')
     ppl = np.exp(total_loss / max_iters)
     return ppl
+
+def eval_seq2seq(model, question, correct, id2char, verbose=False, is_reverse=False):
+    """
+    model: 모델
+    question: 문제 문장 (문자 ID의 배열)
+    correct: 정답 (문자 ID의 배열)
+    id2char: 문자ID -> 문자열(character단위) 변환을 위한 딕셔너리
+    verbose: 결과를 출력할지 여부 -> 결과를 터미널에 출력
+    is_reverse: 입력문을 반전했는지 여부
+
+    Returns 1 if guess == correct else 0
+    """
+    correct = correct.flatten()   # 미니배치 고려했기에 flatten해야
+    start_id = correct[0]   # 정답의 첫번째 단어 ID
+    guess = model.generate(question, start_id, len(correct))   # "sampled" 리스트 반환 composed of sample_ids
+    """
+    - question을 input으로 (xs처럼) 넣고,
+    - start_id를 주고 (정답의 첫 번째 단어 ID),
+    - len(correct)만큼 샘플링한다.
+    """
+
+    # ID -> string(here, characters) transformation
+    question = ''.join([id2char[int(c)] for c in question.flatten()])
+    correct = ''.join([id2char[int(c)] for c in correct])
+    guess = ''.join([id2char[int(c)] for c in guess])
+
+    if verbose:
+        if is_reverse:
+            question = question[::-1]
+
+        colors = {'ok': '\033[92m', 'fail': '\033[91m', 'close': '\033[0m'}   # 색상 코드 딕셔너리
+        print('Q', question)
+        print('T', correct)
+
+        is_windows = os.name == 'nt'
+
+        if correct == guess:
+            mark = colors['ok'] + '☑' + colors['close']
+            if is_windows:
+                mark = 'O'
+            print(mark + ' ' + guess)
+        else:
+            mark = colors['fail'] + '☒' + colors['close']
+            if is_windows:
+                mark = 'X'
+            print(mark + ' ' + guess)
+        print('---')
+
+    return 1 if guess == correct else 0
