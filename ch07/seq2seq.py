@@ -12,7 +12,7 @@ class Encoder:
         V, D, H = vocab_size, vector_size, hidden_size
 
         W_embed = (np.random.randn(V, D) / np.sqrt(V)).astype('f')
-        Wx_lstm = (np.random.randn(D, 4*H) / np.sqrt(H)).astype('f')
+        Wx_lstm = (np.random.randn(D, 4*H) / np.sqrt(D)).astype('f')
         Wh_lstm = (np.random.randn(H, 4*H) / np.sqrt(H)).astype('f')
         b_lstm = np.zeros(4*H).astype('f')
 
@@ -28,8 +28,8 @@ class Encoder:
         self.hs = None
 
     def forward(self, xs):
-        forward_xs = self.time_embed.forward(xs)
-        hs = self.time_lstm.forward(forward_xs)
+        xs = self.time_embed.forward(xs)
+        hs = self.time_lstm.forward(xs)
         self.hs = hs
         return hs[:, -1, :]   # returns the last hidden state of the LSTM layer
 
@@ -54,7 +54,7 @@ class Decoder:
         b_affine = np.zeros(V).astype('f')
 
         self.time_embed = TimeEmbedding(W_embed)
-        self.time_lstm = TimeLSTM(Wx_lstm, Wh_lstm, b_lstm)
+        self.time_lstm = TimeLSTM(Wx_lstm, Wh_lstm, b_lstm, stateful=True)
         self.time_affine = TimeAffine(W_affine, b_affine)
 
         self.params, self.grads = [], []
