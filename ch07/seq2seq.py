@@ -19,7 +19,8 @@ class Encoder:
         self.time_embed = TimeEmbedding(W_embed)
         self.time_lstm = TimeLSTM(Wx_lstm, Wh_lstm, b_lstm, stateful=False)
         """
-        stateful = False로 두어, 문제마다 LSTM 은닉 상태 영행렬로 초기화
+        - stateful = False로 두어, 문제마다 LSTM 은닉 상태 영행렬로 초기화
+        - stateful = True로 한다면, 영행렬이 아니라 TimeLSTM에서 다음 TimeLSTM으로 h가 넘겨짐 -> 대참사
         """
 
         self.params = self.time_embed.params + self.time_lstm.params
@@ -55,6 +56,10 @@ class Decoder:
 
         self.time_embed = TimeEmbedding(W_embed)
         self.time_lstm = TimeLSTM(Wx_lstm, Wh_lstm, b_lstm, stateful=True)
+        """
+        - 이 경우에는, Encoder에서 h를 받아와야 하기 때문에 stateful=True로 지정해줌.
+        - stateful=False일 경우, 받아오더라도 h를 영행렬로 초기화하여 진행 -> 대참사
+        """
         self.time_affine = TimeAffine(W_affine, b_affine)
 
         self.params, self.grads = [], []
