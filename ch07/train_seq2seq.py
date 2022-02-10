@@ -30,6 +30,7 @@ max_grad = 5
 # model, optimizer, trainer
 # model = Seq2seq(vocab_size, vector_size, hidden_size)
 model = PeekySeq2seq(vocab_size, vector_size, hidden_size)
+# test
 optimizer = Adam()
 trainer = Trainer(model, optimizer)
 
