@@ -223,6 +223,7 @@ def eval_seq2seq(model, question, correct, id2char, verbose=False, is_reverse=Fa
     """
     correct = correct.flatten()   # 미니배치 고려했기에 flatten해야
     start_id = correct[0]   # 정답의 첫번째 단어 ID
+    correct = correct[1:]   # 맞춰야 되는 정답: 0부터 처리하므로 정답은 1번째부터
     guess = model.generate(question, start_id, len(correct))   # "sampled" 리스트 반환 composed of sample_ids
     """
     - question을 input으로 (xs처럼) 넣고,
