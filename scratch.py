@@ -1,8 +1,10 @@
-a = 10
-b = 20
+import numpy as np
 
-c = a - b
-d = c
-print(c, d, c==d)
-c = a + b
-print(c, d, c==d)
+a = np.arange(10).reshape(1, 5, 2)
+b = np.arange(2).reshape(1, 1, 2)
+
+print(a)
+print(b)
+
+c = np.concatenate((a, b), axis=2)
+print(c)

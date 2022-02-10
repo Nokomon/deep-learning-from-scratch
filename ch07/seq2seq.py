@@ -8,6 +8,7 @@ from common.base_model import BaseModel
 
 class Encoder:
     # Time Embedding -> Time LSTM -> returns hidden state(h) as a final output
+    # Encoder의 역할: 임의 길이의 문장을 고정 길이 벡터로 변환하는 작업
     def __init__(self, vocab_size, vector_size, hidden_size):
         V, D, H = vocab_size, vector_size, hidden_size
 

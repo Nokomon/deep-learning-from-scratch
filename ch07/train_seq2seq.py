@@ -9,10 +9,15 @@ from common.optimizer import Adam
 from common.trainer import Trainer
 from common.util import eval_seq2seq
 from seq2seq import Seq2seq
+from peeky_seq2seq import PeekySeq2seq
 
 # read dataset
 (x_train, t_train), (x_test, t_test) = sequence.load_data('addition.txt')
 char2id, id2char = sequence.get_vocab()
+
+reverse_input = True
+if reverse_input:
+    x_train, x_test = x_train[:, ::-1], x_test[:, ::-1]
 
 # hyperparameters
 vocab_size = len(char2id)
@@ -23,7 +28,8 @@ max_epoch = 25
 max_grad = 5
 
 # model, optimizer, trainer
-model = Seq2seq(vocab_size, vector_size, hidden_size)
+# model = Seq2seq(vocab_size, vector_size, hidden_size)
+model = PeekySeq2seq(vocab_size, vector_size, hidden_size)
 optimizer = Adam()
 trainer = Trainer(model, optimizer)
 
@@ -40,6 +46,3 @@ for epoch in range(max_epoch):
     acc = float(correct_num) / len(x_test)
     acc_list.append(acc)
     print(f'Evaluation Accuracy: {acc * 100:.3f}')
-
-
-
