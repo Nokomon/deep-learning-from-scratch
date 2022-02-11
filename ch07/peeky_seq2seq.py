@@ -90,8 +90,7 @@ class PeekyDecoder:
 
             # TimeEmbedding
             out = self.time_embed.forward(x)
-            out = np.concatenate((peeky_h, out), axis=2)
-            print(out.shape)
+            out = np.concatenate((peeky_h, out), axis=2)   # shape: (1, 1, 144)
 
             # TimeLSTM
             out = self.time_lstm.forward(out)

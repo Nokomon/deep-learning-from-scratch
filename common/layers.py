@@ -3,6 +3,21 @@ from common.layers import *
 from common.np import *
 from common.config import GPU
 
+class Softmax:
+    def __init__(self):
+        self.params, self.grads = [], []
+        self.out = None
+
+    def forward(self, x):
+        self.out = softmax(x)
+        return self.out
+
+    def backward(self, dout):
+        dx = self.out * dout
+        dx_sum = np.sum(dx, axis=1, keepdims=True)   # why?
+        dx = dx - self,out * dx_sum
+        return dx
+
 class Matmul:
     def __init__(self, W):
         self.params = [W]
